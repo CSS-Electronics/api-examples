@@ -55,6 +55,7 @@ To test this, you can try the `aws_lambda_mdf_convert.py` code:
 1. Under Basic settings, set the timeout to e.g. 2 minutes (test based on your file size)  
 1. Test by uploading a log file from the Home tab in CANcloud (monitor the CloudWatch logs)
 
+Note: If your deployment package requires additional dependencies, you need to include these in the zip. To do this, you can use `pip install [module] --target .` in the folder.
 
 #### MinIO Client (Listen Bucket Notifications)
 The MinIO Client provides a simple interface to listen to bucket events and react.
