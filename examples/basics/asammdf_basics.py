@@ -4,7 +4,9 @@ Test: Last tested with asammdf v5.19.9 + MDF4 J1939 samples from the CANedge Int
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
-import glob
+from datetime import timedelta
+import glob, sys
+
 
 # load MDF/DBC files from input folder
 mdf_extension = ".mf4"
@@ -18,6 +20,12 @@ print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
 mdf = MDF.concatenate(logfiles)
 mdf.save("concatenated", overwrite=True)
 mdf.export("csv", filename="concatenated", time_as_date=True, time_from_zero=False)
+
+# extract info from meta header - e.g. to get correct start time of a file
+session_start = mdf.header.start_time
+delta_seconds = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[0]
+split_start = session_start + timedelta(seconds=delta_seconds)
+split_start_str = split_start.strftime("%Y%m%d%H%M%S")
 
 # filter an MDF
 mdf_filter = mdf.filter(["CAN_DataFrame.ID", "CAN_DataFrame.DataBytes"])
