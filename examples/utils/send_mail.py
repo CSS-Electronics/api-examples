@@ -1,6 +1,7 @@
-# About: helper function to send basic email incl. optional image attachment (modify with your own SMTP server & details)
-# Test: Create a new gmail and enable less secure apps: https://myaccount.google.com/lesssecureapps
-
+"""
+About: helper function to send basic email incl. optional image attachment (modify with your own SMTP server & details)
+Test: Create a new gmail and enable less secure apps: https://myaccount.google.com/lesssecureapps
+"""
 import os
 import smtplib, ssl
 from email.mime.text import MIMEText

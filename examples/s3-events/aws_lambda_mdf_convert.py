@@ -1,6 +1,7 @@
-# About: This is a basic AWS Lambda handler function for event-based processing of uploaded log files - see README for details
-# Test: Last tested on April 4, 2020 with MDF4 sample data
-
+"""
+About: This is a basic AWS Lambda handler function for event-based processing of uploaded log files - see README for details
+Test: Last tested on April 4, 2020 with MDF4 sample data
+"""
 from __future__ import print_function
 import boto3
 import subprocess

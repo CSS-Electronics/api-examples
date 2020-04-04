@@ -1,7 +1,8 @@
-# About: This is a basic MinIO 'listen bucket notification' function for event-based processing of uploaded log files - see README for details
-#        Note that this example uses the MinIO S3 SDK as listen_bucket_notification is specific to MinIO - but the AWS S3 SDK could have been used for the rest
-# Test: Last tested on April 4, 2020 with MDF4 sample data
-
+"""
+About: This is a basic MinIO 'listen bucket notification' function for event-based processing of uploaded log files - see README for details
+Note that this example uses the MinIO S3 SDK as listen_bucket_notification is specific to MinIO - but the AWS S3 SDK could have been used for the rest
+Test: Last tested on April 4, 2020 with MDF4 sample data
+"""
 
 from minio import Minio
 import glob, subprocess, re, tempfile

@@ -1,6 +1,7 @@
-# About: Load MDF log files & DBCs from an input folder and showcase various operations
-# Test: Last tested with asammdf v5.19.9 + MDF4 J1939 samples from the CANedge Intro docs
-
+"""
+About: Load MDF log files & DBCs from an input folder and showcase various operations
+Test: Last tested with asammdf v5.19.9 + MDF4 J1939 samples from the CANedge Intro docs
+"""
 from asammdf import MDF
 import matplotlib.pyplot as plt
 import glob
@@ -9,6 +10,7 @@ import glob
 mdf_extension = ".mf4"
 logfiles = glob.glob("input/*" + mdf_extension)
 dbc = glob.glob("input/*.dbc")
+signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
 print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
 
 
@@ -33,7 +35,6 @@ mdf_scaled.export(
 )
 
 # extract a list of signals from a scaled MDF
-signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
 mdf_scaled_signal_list = mdf_scaled.select(signals)
 
 # extract a filtered MDF based on a signal list
