@@ -35,7 +35,7 @@ For details on getting started with the APIs, see the [CANedge Intro](https://ww
 ## Script guides  
 
 ### S3 events 
-In many cases it can be useful to process log files immediately when they're uploaded - e.g. for predictive maintenance purposes or workflow optimization. 
+Often it can be useful to process log files immediately when they're uploaded - e.g. for predictive maintenance or workflow. 
 
 Below, we describe one (of many) ways this can be setup on AWS S3 and MinIO S3, respectively. The examples take can be used to automatically run an MDF4 converter on each uploaded log file, transferring the output into a new bucket.
 
@@ -59,7 +59,7 @@ To test this, you can try the `aws_lambda_mdf_convert.py` code:
 #### MinIO Client (Listen Bucket Notifications)
 The MinIO Client provides a simple interface to listen to bucket events and react.
 
-To test this, you can try the `minio_listen_mdf_converter.py` code:  
+To test this, you can try the `minio_listen_mdf_convert.py` code:  
 1. Update the code with relevant suffix, converter path and MinIO server details
 1. Run the code with your MinIO server by e.g. adding it to your server startup `*.bat`
 
@@ -71,7 +71,7 @@ Below we list other resources for API documentation and examples.
 ### MDF4
 The most popular tools for processing the CANedge log files are asammdf and our MDF4 converters:  
 - [asammdf](https://github.com/danielhrisca/asammdf) - releases & documentation  
-- [mdf4-conveters](https://github.com/CSS-Electronics/mdf4-converters) - releases & documentation  
+- [mdf4-converters](https://github.com/CSS-Electronics/mdf4-converters) - releases & documentation  
 
 ### S3 
 You can manage your S3 server via the AWS SDK or the derived MinIO SDK. Both are available in multiple programming languages incl. Python, Ruby, Javascript, Java, Go and more.
