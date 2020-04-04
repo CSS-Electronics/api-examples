@@ -24,6 +24,11 @@ For details on getting started with the APIs, see the [CANedge Intro](https://ww
 
 ---
 
+## Sample data (MDF4 & DBC)
+You can find MDF4 and DBC samples in the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/).
+
+---
+
 ## Usage info
 - The scripts in this project are designed to be minimal and help you get started  
 - The scripts are not designed for production and will require adjustment for your use case  
