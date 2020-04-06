@@ -7,9 +7,10 @@ For details on getting started with the APIs, see the [CANedge Intro](https://ww
 ---
 ## Features
 ```
-- basics: asammdf API basics (e.g. how to DBC convert MDF4 data, transform it to pandas and plot it)
-- basics: S3 basics (e.g. how to download, upload or list data on your server)
-- basics: MDF converter (how to use the simple MDF4 converter executables in scripts)
+- mdf-basics: asammdf API basics (e.g. how to DBC convert MDF4 data, transform it to pandas and plot it)
+- mdf-basics: MDF converter (how to use the simple MDF4 converter executables in scripts)
+- s3-basics: S3 basics (e.g. how to download, upload or list specific objects on your server)
+- s3-basics: Using s3fs to access S3 as a local filesystem - and how to load multiple CSVs on S3 into a dask dataframe
 - S3 events: AWS Lambda with MDF4 converters (how to automate your MDF4 processing on AWS)
 - S3 events: MinIO notifications with MDF4 converters (how to automate your MDF4 processing on MinIO)
 - misc: Light CSV DBC converter (extracting signal data from the mdf2csv converter output)
