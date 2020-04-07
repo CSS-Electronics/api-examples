@@ -1,12 +1,11 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations
-Test: Last tested with asammdf v5.19.9 + MDF4 J1939 samples from the CANedge Intro docs
+Test: Last tested with asammdf v5.19.14 + MDF4 J1939 samples from the CANedge Intro docs
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import glob, sys
-
 
 # load MDF/DBC files from input folder
 mdf_extension = ".mf4"
@@ -14,7 +13,6 @@ logfiles = glob.glob("input/*" + mdf_extension)
 dbc = glob.glob("input/*.dbc")
 signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
 print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
-
 
 # concatenate MDF files from input folder and export as CSV incl. timestamps (localized time)
 mdf = MDF.concatenate(logfiles)
@@ -31,7 +29,7 @@ split_start_str = split_start.strftime("%Y%m%d%H%M%S")
 mdf_filter = mdf.filter(["CAN_DataFrame.ID", "CAN_DataFrame.DataBytes"])
 mdf.save("filtered", overwrite=True)
 
-# DBC convert the unfiltered MDF + save & export
+# DBC convert the unfiltered MDF + save & export resampled data
 mdf_scaled = mdf.extract_can_logging(dbc, ignore_invalid_signals=True)
 mdf_scaled.save("scaled", overwrite=True)
 mdf_scaled.export(
@@ -40,6 +38,7 @@ mdf_scaled.export(
     time_as_date=True,
     time_from_zero=False,
     single_time_base=True,
+    raster=0.5,
 )
 
 # extract a list of signals from a scaled MDF
@@ -59,7 +58,6 @@ pd["ratio"] = pd.loc[:, signals[0]] / pd.loc[:, signals[1]]
 pd_f = pd.loc["2020-01-13 13:58:35":"2020-01-13 13:59:56"]
 pd_f = pd_f[(pd_f[signals[0]] > 640)]
 print("\nFiltered pandas dataframe:\n", pd_f)
-
 
 # trigger an action if a condition is satisfied
 signal_stats = pd_f[signals[0]].agg(["count", "min", "max", "mean", "std"])

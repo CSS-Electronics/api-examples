@@ -10,6 +10,8 @@ Test: Tested on MinIO S3 and AWS S3 - you can test with your own server
 import s3fs, glob, json, sys
 import pandas as pd
 import dask.dataframe as dd
+from asammdf import MDF
+
 
 # initialize S3 resource for s3fs
 endpoint = "http://127.0.0.1:9000"  # e.g. "https://s3.amazonaws.com"  for us-east-1 AWS S3 server
@@ -33,16 +35,24 @@ print(fs.ls(bucket_name))
 
 
 # open a JSON file and parse the contents
-device = "1B29E974"
-s3_key = bucket_name + "/" + device + "/device.json"
+device_folder = bucket_name + "/1B29E974"
+s3_key = device_folder + "/device.json"
 with fs.open(s3_key, "rb") as f:
     device_json = f.read().decode("utf8").replace("'", '"')
     device_json = json.loads(device_json)
     print(device_json)
 
 
+# load an MDF file via asammdf
+s3_key = device_folder + "/00000001/00000001.mf4"
+with fs.open(s3_key, "rb") as f:
+    mdf = MDF(f)
+    df = mdf.to_dataframe(time_as_date=True)
+    print(df)
+
+
 # open a CSV file (e.g. from the mdf2csv event converter) as a pandas dataframe
-s3_key = bucket_name + "/" + device + "/00000001/00000002_CAN.csv"
+s3_key = device_folder + "/00000001/00000002_CAN.csv"
 with fs.open(s3_key, "rb") as f:
     df = pd.read_csv(f, sep=";")
     print(df)
