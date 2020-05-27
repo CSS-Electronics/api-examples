@@ -1,23 +1,38 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations
-Test: Last tested with asammdf v5.19.14 + MDF4 J1939 samples from the CANedge Intro docs
+Test: Last tested with asammdf v5.19.14 + MDF4 J1939 samples from the CANedge Intro docs.
+Tested with numpy 1.18.4 installed
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
 from datetime import timedelta
-import glob, sys
+import glob, sys, os
+from pathlib import Path
+
+
+# set variables
+mdf_extension = ".MF4"
+input_folder = "input"
+output_folder = "output"
+
 
 # load MDF/DBC files from input folder
-mdf_extension = ".mf4"
-logfiles = glob.glob("input/*" + mdf_extension)
-dbc = glob.glob("input/*.dbc")
+path = Path(__file__).parent.absolute()
+path_in = Path(path, input_folder)
+path_out = Path(path, output_folder)
+
+logfiles = list(path_in.glob("*" + mdf_extension))
+dbc = list(path_in.glob("*" + ".DBC"))
+
 signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
 print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
 
 # concatenate MDF files from input folder and export as CSV incl. timestamps (localized time)
 mdf = MDF.concatenate(logfiles)
-mdf.save("concatenated", overwrite=True)
-mdf.export("csv", filename="concatenated", time_as_date=True, time_from_zero=False)
+mdf.save(Path(path_out, "conc"), overwrite=True)
+mdf.export(
+    "csv", filename=Path(path_out, "conc"), time_as_date=True, time_from_zero=False
+)
 
 # extract info from meta header - e.g. to get correct start time of a file
 session_start = mdf.header.start_time
@@ -27,14 +42,14 @@ split_start_str = split_start.strftime("%Y%m%d%H%M%S")
 
 # filter an MDF
 mdf_filter = mdf.filter(["CAN_DataFrame.ID", "CAN_DataFrame.DataBytes"])
-mdf.save("filtered", overwrite=True)
+mdf.save(Path(path_out, "filtered"), overwrite=True)
 
 # DBC convert the unfiltered MDF + save & export resampled data
 mdf_scaled = mdf.extract_can_logging(dbc, ignore_invalid_signals=True)
 mdf_scaled.save("scaled", overwrite=True)
 mdf_scaled.export(
     "csv",
-    filename="scaled",
+    filename=Path(path_out, "scaled"),
     time_as_date=True,
     time_from_zero=False,
     single_time_base=True,
@@ -67,5 +82,5 @@ max_diff = 300
 if signal_diff > max_diff:
     print(f"Filtered {signals[0]} max difference of {signal_diff} is above {max_diff}")
     pd_f.plot(y=signals[0])
-    plt.savefig(f"signal_{signals[0]}.png")
+    plt.savefig(Path(path_out, f"signal_{signals[0]}.png"))
     # do something, e.g. send a warning mail with a plot
