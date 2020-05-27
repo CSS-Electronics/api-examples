@@ -22,6 +22,7 @@ For details on getting started with the APIs, see the [CANedge Intro](https://ww
 ## Requirements
 - The scripts are tested using Python 3.7  
 - Most scripts are designed for Windows, but can easily be modified for Linux  
+- The MDF scripts are tested with `asammdf 5.19.3` and `numpy 1.18.4`
 
 ---
 

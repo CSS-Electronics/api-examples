@@ -1,6 +1,6 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations
-Test: Last tested with asammdf v5.19.14 + MDF4 J1939 samples from the CANedge Intro docs.
+Test: Last tested with asammdf v5.19.3 + MDF4 J1939 samples from the CANedge Intro docs.
 Tested with numpy 1.18.4 installed
 """
 from asammdf import MDF
