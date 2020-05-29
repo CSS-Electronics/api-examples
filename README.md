@@ -22,12 +22,16 @@ For details on getting started with the APIs, see the [CANedge Intro](https://ww
 ## Requirements
 - The scripts are tested using Python 3.7  
 - Most scripts are designed for Windows, but can easily be modified for Linux  
-- The MDF scripts are tested with `asammdf 5.19.3` and `numpy 1.18.4`
+- Note: We strongly recommend to install script requirements based on the `requirements.txt`:
+
+``pip install -r requirements.txt`` 
 
 ---
 
 ## Sample data (MDF4 & DBC)
 You can find MDF4 and DBC samples in the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/).
+
+The `mdf-basics/` scripts have been tested with the J1939 sample data and DBC.
 
 ---
 
