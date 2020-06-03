@@ -60,7 +60,7 @@ To test this, you can try the `aws_lambda_mdf_convert.py` code:
 1. Add S3 as trigger with your source bucket and 'All object create events' as event type  
 1. Set the suffix to match your log file extension, e.g. `.MF4`, `.MFC`, `.MFE`, ...  
 1. Download the `aws_lambda_mdf_convert.py` to a folder and update the `target_bucket`  
-1. Add your preferred Linux (`*.AppImage`) MDF4 converter and the `passwords.json` file  
+1. Add a Linux MDF4 converter (update the `converter_name`) and the `passwords.json` file  
 1. Zip the folder and upload the content via the AWS Lambda dropdown under Code entry type  
 1. Change the Handler field to `aws_lambda_mdf_convert.lambda_handler` and hit Save  
 1. Under Basic settings, set the timeout to e.g. 2 minutes (test based on your file size)  

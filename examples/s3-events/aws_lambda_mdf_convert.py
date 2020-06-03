@@ -12,11 +12,12 @@ s3 = boto3.client("s3")
 
 
 def lambda_handler(event, context):
-    # specify the target bucket for the output
+    # specify the target bucket for the output and the converter name
     target_bucket = "ce2-lambda-target"
+    converter_name = "mdf2asc"
 
     # load converter and list relevant support_files
-    converter = glob.glob("*.AppImage")[0]
+    converter = glob.glob(converter_name)[0]
     support_files = ["passwords.json"]
 
     # extract source_bucket and key from event
@@ -37,14 +38,14 @@ def lambda_handler(event, context):
 
     subprocess.run(["cp", "./" + converter, "/tmp"])
     subprocess.run(["chmod", "+x", "/tmp/" + converter])
-    subprocess.run(["/tmp/" + converter, "--appimage-extract-and-run", "-i", local_key])
+    subprocess.run(["/tmp/" + converter, "-i", local_key])
 
     # select the converted objects
     objects_all = glob.glob("/tmp/*")
     objects_conv = [
         obj
         for obj in objects_all
-        if not re.search(f"(passwords.json$|.AppImage$|{local_key}$)", obj)
+        if not re.search(f"(passwords.json$|{converter}$|{local_key}$)", obj)
     ]
 
     print("All objects in tmp/:", objects_all)
