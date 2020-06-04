@@ -5,17 +5,20 @@ Test: Last tested on April 4, 2020 with MDF4 sample data
 """
 
 from minio import Minio
-import glob, subprocess, re, tempfile
+import glob, subprocess, re, tempfile, os
 
 # variables
 prefix = ""  # use to optionally specify a specific device
-suffix = ".mf4"  # set to match the file extension your devices are uploading with (.MF4, .MFE, .MFM)
+suffix = ".MF4"  # set to match the file extension your devices are uploading with (.MF4, .MFE, .MFM)
 
 endpoint = "127.0.0.1:9000"
 access_key = "CANedgeTestServerAccessKey"
 secret_key = "MySecretPassword"
 source_bucket = "ce2-source"
-secure = False  # specify if TLS is enabled on the server
+secure = False
+
+# if using TLS (HTTPS), set secure = True and set the path below to your public.crt certificate:
+# os.environ["SSL_CERT_FILE"] = "C:\\Users\\marti\\.minio\\certs\\public.crt"
 
 target_bucket = "ce2-target"
 converter = "mdf2csv.exe"
@@ -52,7 +55,7 @@ for event in events:
     objects_conv = [
         obj
         for obj in objects_all
-        if not re.search(f"(passwords.json$|.exe$|.AppImage$|{suffix}$)", obj)
+        if not re.search(f"(passwords.json$|.exe$|{suffix}$)", obj)
     ]
     print("Objects in temporary directory:\n", objects_all)
     print("Successfully converted objects:\n", objects_conv)

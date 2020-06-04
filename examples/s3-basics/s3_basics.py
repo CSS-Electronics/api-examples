@@ -1,6 +1,7 @@
 """
 About: Showcase basic S3 server operations (download, upload, delete, ...).
 Note that the S3 API (called boto3 in Python) can be used across S3 servers, incl. AWS and MinIO.
+Note: If you need to use MinIO with a self-signed certificate (TLS), we suggest using the MinIO Python SDK.
 Test: Tested on MinIO S3 and AWS S3 - you can test with your own server
 """
 
