@@ -1,104 +1,51 @@
-# CANedge API Examples - MDF4 and S3
+# CANedge API Examples - Processing Log File Data (Local, S3)
 
-This project includes basic Python examples of how the MDF4 and S3 APIs can be used to automate data processing with your CANedge CAN/LIN data loggers.
-
-For details on getting started with the APIs, see the [CANedge Intro](https://www.csselectronics.com/screen/page/can-logger-resources). 
+This project includes Python examples of how to process data from your [CANedge](https://www.csselectronics.com/) CAN/LIN data loggers.
 
 ---
 ## Features
 ```
-- mdf-basics: asammdf API basics (e.g. how to DBC convert MDF4 data, transform it to pandas and plot it)
-- mdf-basics: MDF converter (how to use the simple MDF4 converter executables in scripts)
-- s3-basics: S3 basics (e.g. how to download, upload or list specific objects on your server)
-- s3-basics: Using s3fs to access S3 as a local filesystem - and how to load multiple CSVs on S3 into a dask dataframe
-- S3 events: AWS Lambda with MDF4 converters (how to automate your MDF4 processing on AWS)
-- S3 events: MinIO notifications with MDF4 converters (how to automate your MDF4 processing on MinIO)
-- misc: Light CSV DBC converter (extracting signal data from the mdf2csv converter output)
-- utils: Basic e-mail sender function
+For most use cases we recommend to start with the below examples:
+- data-processing: List specific log files, load them and DBC decode the data (local, S3)
+
+For some use cases the below examples may be useful:
+- asammdf-basics: Examples of using the asammdf API for processing MDF4 data
+- s3-basics: Examples of how to download, upload or list specific objects on your server
+- s3-events: Using AWS Lambda (for event based data processing)
+- s3-events: Using MinIO notifications (for event based data processing)
+- misc: Example of automating the use of the MDF4 converters
+- misc: Basic e-mail sender function
+
 ```
 
 ---
 
 ## Requirements
-- The scripts are tested using Python 3.7  
-- Most scripts are designed for Windows, but can easily be modified for Linux  
-- Note: We strongly recommend to install script requirements based on the `requirements.txt`:
-
-``pip install -r requirements.txt`` 
+- The scripts are tested using Python 3.7
+- Most scripts are designed for Windows, but can easily be used/modified for Linux  
+- We recommend to install script requirements based on the `requirements.txt` in each folder:
+  ``pip install -r requirements.txt``
 
 ---
 
 ## Sample data (MDF4 & DBC)
 You can find MDF4 and DBC samples in the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/).
 
-The `mdf-basics/` scripts have been tested with the J1939 sample data and DBC.
-
 ---
 
 ## Usage info
-- The scripts in this project are designed to be minimal and help you get started  
-- The scripts are not designed for production and will require adjustment for your use case  
-- The scripts are not covered by our technical support  
+- Some example folders contain their own `README.md` files for extra information
+- These example scripts are designed to be minimal and to help you get started - not for production
 - Some S3 scripts use hardcoded credentials to ease testing - for production see e.g. [this guide](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html)
 
 ---
 
-## Script guides  
+## Which API modules to use?
+There are many ways that you can work with the data from your CANedge devices. Most automation use cases involve fetching data from a specific device and time period - and DBC decoding this into a dataframe for further processing. Here, we recommend to look at the examples from the `data-processing/` folder. These examples use our custom modules designed for use with the CANedge: The [mdf_iter](https://pypi.org/project/mdf-iter/) (for loading MDF4 data), the [canedge_browser](https://github.com/CSS-Electronics/canedge_browser) (for fetching specific data locally or from S3) and the [can_decoder](https://github.com/CSS-Electronics/can_decoder) (for DBC decoding the data). In combination, these modules serve to support most use cases.
 
-### S3 events 
-Often it can be useful to process log files immediately when they're uploaded - e.g. for predictive maintenance or workflow. 
+If you have needs that are not covered by these modules, you can check out the other examples using the asammdf API, the AWS/MinIO S3 API and our MDF4 converters.
 
-Below, we describe one (of many) ways this can be setup on AWS S3 and MinIO S3, respectively. The examples take can be used to automatically run an MDF4 converter on each uploaded log file, transferring the output into a new bucket.
-
-#### AWS Lambda
-AWS Lambda lets you run code without provisioning or managing servers - learn more [here](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html).
-
-To test this, you can try the `aws_lambda_mdf_convert.py` code:  
-1. Create an [IAM execution role](https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example.html#with-s3-create-execution-role) incl. permissions: `AWSLambdaBasicExecutionRole` + `AmazonS3FullAccess`  
-1. Create a target bucket for the converted files  
-1. In Services/Lambda add a new function incl. a name, Python 3.7 and your execution role
-1. Add S3 as trigger with your source bucket and 'All object create events' as event type  
-1. Set the suffix to match your log file extension, e.g. `.MF4`, `.MFC`, `.MFE`, ...  
-1. Download the `aws_lambda_mdf_convert.py` to a folder and update the `target_bucket`  
-1. Add a Linux MDF4 converter (update the `converter_name`) and the `passwords.json` file  
-1. Zip the folder and upload the content via the AWS Lambda dropdown under Code entry type  
-1. Change the Handler field to `aws_lambda_mdf_convert.lambda_handler` and hit Save  
-1. Under Basic settings, set the timeout to e.g. 2 minutes (test based on your file size)  
-1. Test by uploading a log file from the Home tab in CANcloud (monitor the CloudWatch logs)
-
-Note: If your deployment package requires additional dependencies, you need to include these in the zip. To do this, you can use `pip install [module] --target .` in the folder.
-
-#### MinIO Client (Listen Bucket Notifications)
-The MinIO Client provides a simple interface to listen to bucket events and react.
-
-To test this, you can try the `minio_listen_mdf_convert.py` code:  
-1. Update the code with relevant suffix, converter path and MinIO server details
-1. Run the code with your MinIO server by e.g. adding it to your server startup `*.bat`
-
----
-
-## Explore further 
-Below we list other resources for API documentation and examples.
-
-### MDF4
-The most popular tools for processing the CANedge log files are asammdf and our MDF4 converters:  
-- [asammdf](https://github.com/danielhrisca/asammdf) - releases & documentation  
-- [mdf4-converters](https://github.com/CSS-Electronics/mdf4-converters) - releases & documentation  
-
-### S3 
-You can manage your S3 server via the AWS SDK or the derived MinIO SDK. Both are available in multiple programming languages incl. Python, Ruby, Javascript, Java, Go and more.
-
-- [AWS S3 REST API](https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html) - documentation  
-- [AWS SDKs](https://aws.amazon.com/tools/) - documentation for the AWS S3 SDKs  
-- [MinIO SDKs](https://docs.min.io/docs/javascript-client-quickstart-guide.html) - documentation for the MinIO S3 SDKs  
-
-In particular, MinIO provides a set of useful script examples:  
-
-- [MinIO Python SDK Examples](https://github.com/minio/minio-py)  
-- [MinIO Javascript SDK Examples](https://github.com/minio/minio-js)  
-- [MinIO Ruby SDK Examples](https://github.com/minio/minio-ruby)  
-- [MinIO Java SDK Examples](https://github.com/minio/minio-java)  
-- [MinIO Go SDK Examples](https://github.com/minio/minio-go)  
+If in doubt, [contact us](https://www.csselectronics.com/screen/page/can-bus-logger-contact) for sparring.
 
 ---
 ## About the CANedge
@@ -109,10 +56,9 @@ For details on installation and how to get started, see the documentation:
 - [CANedge2 Product Page](https://www.csselectronics.com/screen/product/can-lin-logger-wifi-canedge2/language/en)  
 
 ---
-## Contribution & support 
+## Contribution & support
 Feature suggestions, pull requests or questions are welcome!
 
 You can contact us at CSS Electronics below:  
 - [www.csselectronics.com](https://www.csselectronics.com)  
 - [Contact form](https://www.csselectronics.com/screen/page/can-bus-logger-contact)  
-- contact[AT]csselectronics.com  

@@ -1,7 +1,7 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations
-Test: Last tested with asammdf v5.19.3 + MDF4 J1939 samples from the CANedge Intro docs.
-Tested with numpy 1.18.4 installed
+Test: Last tested with asammdf v5.21.0 + MDF4 J1939 samples from the CANedge Intro docs.
+Tested with numpy 1.19.1 installed
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
