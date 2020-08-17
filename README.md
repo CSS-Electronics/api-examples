@@ -1,4 +1,4 @@
-# CANedge API Examples - Processing Log File Data (Local, S3)
+# CANedge API Examples - Process Log File Data (Local, S3)
 
 This project includes Python examples of how to process data from your [CANedge](https://www.csselectronics.com/) CAN/LIN data loggers.
 
@@ -23,7 +23,7 @@ For some use cases the below examples may be useful:
 ## Requirements
 - The scripts are tested using Python 3.7
 - Most scripts are designed for Windows, but can easily be used/modified for Linux  
-- We recommend to install script requirements based on the `requirements.txt` in each folder:
+- We recommend to install script requirements based on the `requirements.txt` in each folder:  
   ``pip install -r requirements.txt``
 
 ---
