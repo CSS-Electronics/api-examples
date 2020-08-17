@@ -3,33 +3,7 @@ import canedge_browser
 import can_decoder
 
 from datetime import datetime, timezone
-
-
-def setup_fs_s3():
-    """Helper function to setup a remote S3 filesystem connection.
-    """
-    import s3fs
-
-    fs = s3fs.S3FileSystem(
-        key="<key>", secret="<secret>", client_kwargs={"endpoint_url": "<endpoint>"},
-    )
-
-    return fs
-
-
-def setup_fs():
-    """Helper function to setup the local file system.
-    """
-    from fsspec.implementations.local import LocalFileSystem
-    from pathlib import Path
-
-    fs = LocalFileSystem()
-
-    # Setup path to local folder structure, as if copied from a CANedge SD.
-    # Assumes the folder is placed in same directory as this file and named "LOG".
-    base_path = Path(__file__).parent
-
-    return fs, str(base_path)
+from utils import setup_fs, setup_fs_s3
 
 
 # specify which devices to process (from local folder or S3 bucket)
@@ -48,12 +22,10 @@ db = can_decoder.load_dbc(dbc_path)
 df_decoder = can_decoder.DataFrameDecoder(db)
 
 # fs = setup_fs_s3()
-fs, folder_name = setup_fs()
+fs = setup_fs()
 
 # List log files from your S3 server
-log_files = canedge_browser.get_log_files(
-    fs, devices, folder_name, start_date=start, stop_date=stop
-)
+log_files = canedge_browser.get_log_files(fs, devices, start_date=start, stop_date=stop)
 print(f"Found a total of {len(log_files)} log files")
 
 for log_file in log_files:
