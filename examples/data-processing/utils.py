@@ -16,6 +16,8 @@ def setup_fs():
     from fsspec.implementations.local import LocalFileSystem
     from pathlib import Path
 
+    # Setup path to local folder structure, as if copied from a CANedge SD.
+    # Assumes the folder is placed in same directory as this file
     fs = LocalFileSystem()
 
     return fs
