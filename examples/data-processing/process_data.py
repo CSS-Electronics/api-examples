@@ -64,4 +64,4 @@ for log_file in log_files:
 
 # create a concatenated dataframe based on the individual dataframes
 df_concat = pd.concat(df_concat)
-print(f"Concatenated all {len(df_concat)} decoded frames into one dataframe")
+print(f"\nConcatenated all {len(df_concat)} decoded frames into one dataframe")

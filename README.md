@@ -26,6 +26,9 @@ For some use cases the below examples may be useful:
 - We recommend to install script requirements based on the `requirements.txt` in each folder:  
   ``pip install -r requirements.txt``
 
+### Linux users and mdf_iter
+For Linux users, the `mdf_iter` module is temporarily pending a release for installation via the regular pip manager. Instead, you can download the [Linux mdf_iter build](http://canlogger1000.csselectronics.com/files/mdf_iter-0.0.1-cp35-abi3-linux_x86_64.whl) and install the package from local disk via `pip install mdf_iter-0.0.1-cp35-abi3-linux_x86_64.whl`. 
+
 ---
 
 ## Sample data (MDF4 & DBC)
