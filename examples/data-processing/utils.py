@@ -4,7 +4,12 @@ def setup_fs_s3():
     import s3fs
 
     fs = s3fs.S3FileSystem(
-        key="<key>", secret="<secret>", client_kwargs={"endpoint_url": "<endpoint>"},
+        key="<key>",
+        secret="<secret>",
+        client_kwargs={
+            "endpoint_url": "<endpoint>",
+            "verify": "path\\to\\public_certificate.crt",  # for TLS enabled MinIO servers
+        },
     )
 
     return fs
