@@ -27,7 +27,7 @@ For some use cases the below examples may be useful:
   ``pip install -r requirements.txt``
 
 ### Platforms supported
-The below platforms are currently supported for the `mdf_iter`, `canedge_browser` and `dbc_decoder` modules:
+The below platforms are currently supported for the `mdf_iter`, `canedge_browser` and `can_decoder` modules:
 
 - Linux: x86-64 (Python 3.5, 3.6, 3.7, 3.8)
 - Windows: x86-64 (Python 3.7, 3.8) - 32 bit builds will be added
