@@ -21,7 +21,7 @@ For some use cases the below examples may be useful:
 ---
 
 ## Requirements
-- We recommend to install script dependencies based on the `requirements.txt` in each folder:  
+We recommend to install script dependencies via the `requirements.txt` in each folder:  
   ``pip install -r requirements.txt``
 
 ### Platforms supported
