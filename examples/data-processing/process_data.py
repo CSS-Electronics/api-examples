@@ -45,7 +45,9 @@ for log_file in log_files:
     # extract all DBC decodable signals and print dataframe
     df_phys = df_decoder.decode_frame(df_raw)
     print(f"Extracted {len(df_phys)} DBC decoded frames")
-    path = log_file.split("LOG/")[1].replace("MF4", "csv").replace("/", "_")
+    path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace(
+        "/", "_"
+    )
     df_phys.to_csv(path)
 
     if df_phys.empty:
