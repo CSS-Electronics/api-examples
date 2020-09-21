@@ -32,6 +32,7 @@ print(f"Found a total of {len(log_files)} log files")
 
 df_concat = []
 
+# -----------------------------------------
 for log_file in log_files:
     # open log file, get device id and extract dataframe with raw CAN data
     print(f"\nProcessing log file: {log_file}")
@@ -67,3 +68,16 @@ for log_file in log_files:
 # create a concatenated dataframe based on the individual dataframes
 df_concat = pd.concat(df_concat)
 print(f"\nConcatenated all {len(df_concat)} decoded frames into one dataframe")
+
+# -----------------------------------------
+# restructure dataframe to have resampled signals in columns & save as CSV
+df_join = pd.DataFrame({"TimeStamp": []})
+for signal, signal_data in df_concat.groupby("Signal"):
+    df_join = pd.merge_ordered(
+        df_join,
+        signal_data["Physical Value"].rename(signal).resample("1S").pad().dropna(),
+        on="TimeStamp",
+        fill_method="none",
+    )
+
+df_join.set_index("TimeStamp").to_csv("output_joined.csv")
