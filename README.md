@@ -33,7 +33,7 @@ The below platforms are currently supported for the `mdf_iter`, `canedge_browser
 ---
 
 ## Sample data (MDF4 & DBC)
-You can find MDF4 and DBC samples in the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/).
+You can download J1939 MDF4 & DBC samples from the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/). 
 
 ---
 
@@ -55,7 +55,7 @@ If in doubt, [contact us](https://www.csselectronics.com/screen/page/can-bus-log
 ## About the CANedge
 
 For details on installation and how to get started, see the documentation:
-- [CANedge Resources](https://www.csselectronics.com/screen/page/can-logger-resources)  
+- [CANedge Docs](https://www.csselectronics.com/screen/page/can-logger-resources)  
 - [CANedge1 Product Page](https://www.csselectronics.com/screen/product/can-logger-sd-canedge1/language/en)  
 - [CANedge2 Product Page](https://www.csselectronics.com/screen/product/can-lin-logger-wifi-canedge2/language/en)  
 
