@@ -49,10 +49,11 @@ for log_file in log_files:
     path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace(
         "/", "_"
     )
-    df_phys.to_csv(path)
 
     if df_phys.empty:
         continue
+
+    df_phys.to_csv(path)
 
     # create a list of the individual DBC decoded dataframes:
     df_concat.append(df_phys)
