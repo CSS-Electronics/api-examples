@@ -16,14 +16,16 @@ def setup_fs_s3():
 
 
 def setup_fs():
-    """Helper function to setup the local file system.
+    """Helper function to setup the file system.
     """
-    from fsspec.implementations.local import LocalFileSystem
     from pathlib import Path
+    import canedge_browser
 
-    # Setup path to local folder structure, as if copied from a CANedge SD.
+    base_path = Path(__file__).parent
+	
+	# Setup path to local folder structure, as if copied from a CANedge SD.
     # Assumes the folder is placed in same directory as this file
-    fs = LocalFileSystem()
+    fs = canedge_browser.LocalFileSystem(base_path=base_path)
 
     return fs
 

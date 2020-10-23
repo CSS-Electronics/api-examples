@@ -3,10 +3,10 @@ import canedge_browser
 import can_decoder
 
 import pandas as pd
-
 from datetime import datetime, timezone
-from utils import setup_fs, setup_fs_s3
+from pathlib import Path
 
+from utils import setup_fs, setup_fs_s3
 
 # specify which devices to process (from local folder or S3 bucket)
 devices = ["LOG/958D2219"]
@@ -16,7 +16,8 @@ start = datetime(year=2020, month=1, day=13, hour=0, minute=0, tzinfo=timezone.u
 stop = datetime(year=2099, month=1, day=1, tzinfo=timezone.utc)
 
 # specify DBC path
-dbc_path = r"CSS-Electronics-SAE-J1939-DEMO.dbc"
+base_path = Path(__file__).parent
+dbc_path = base_path / r"CSS-Electronics-SAE-J1939-DEMO.dbc"
 
 # ---------------------------------------------------
 # initialize DBC converter and file loader
@@ -38,22 +39,18 @@ for log_file in log_files:
     print(f"\nProcessing log file: {log_file}")
     with fs.open(log_file, "rb") as handle:
         mdf_file = mdf_iter.MdfFile(handle)
-        device_id = mdf_file.get_metadata()[
-            "HDComment.Device Information.serial number"
-        ]["value_raw"]
+        device_id = mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
         df_raw = mdf_file.get_data_frame()
 
     # extract all DBC decodable signals and print dataframe
     df_phys = df_decoder.decode_frame(df_raw)
     print(f"Extracted {len(df_phys)} DBC decoded frames")
-    path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace(
-        "/", "_"
-    )
+    path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
 
     if df_phys.empty:
         continue
 
-    df_phys.to_csv(path)
+    df_phys.to_csv(base_path / path)
 
     # create a list of the individual DBC decoded dataframes:
     df_concat.append(df_phys)
@@ -75,10 +72,7 @@ print(f"\nConcatenated all {len(df_concat)} decoded frames into one dataframe")
 df_join = pd.DataFrame({"TimeStamp": []})
 for signal, signal_data in df_concat.groupby("Signal"):
     df_join = pd.merge_ordered(
-        df_join,
-        signal_data["Physical Value"].rename(signal).resample("1S").pad().dropna(),
-        on="TimeStamp",
-        fill_method="none",
+        df_join, signal_data["Physical Value"].rename(signal).resample("1S").pad().dropna(), on="TimeStamp", fill_method="none",
     )
 
-df_join.set_index("TimeStamp").to_csv("output_joined.csv")
+df_join.set_index("TimeStamp").to_csv(base_path / "output_joined.csv")
