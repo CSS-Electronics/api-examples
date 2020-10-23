@@ -35,6 +35,8 @@ The below platforms are currently supported for the `mdf_iter`, `canedge_browser
 ## Sample data (MDF4 & DBC)
 You can download J1939 MDF4 & DBC samples from the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/). 
 
+The `data-processing/` folder also includes ready-to-test J1939 log files and a demo DBC.
+
 ---
 
 ## Usage info
