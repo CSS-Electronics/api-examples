@@ -49,19 +49,13 @@ def process_tp_example(devices, dbc_path, res_id_list_hex, tp_type):
 
 # run examples
 devices = ["LOG_TP/0D2C6546"]
-dbc_path = r"tp_uds.dbc"
+dbc_path = r"dbc_files/tp_uds.dbc"
 res_id_list_hex = ["0x7E9"]
 
 process_tp_example(devices, dbc_path, res_id_list_hex, "uds")
 
 devices = ["LOG_TP/64AB4329"]
 res_id_list_hex = ["0x1DEFFF00"]
-dbc_path = r"tp_nmea.dbc"
+dbc_path = r"dbc_files/tp_nmea.dbc"
 
 process_tp_example(devices, dbc_path, res_id_list_hex, "nmea")
-
-# devices = ["LOG_TP/FE34E37D"]
-# res_id_list_hex = ["0x7E9"]
-# dbc_path = r"tp_vin.dbc"
-#
-# process_tp_example(devices, dbc_path, res_id_list_hex, "uds")

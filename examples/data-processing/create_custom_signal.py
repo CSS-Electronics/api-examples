@@ -16,7 +16,7 @@ start = datetime(year=2020, month=1, day=13, hour=0, minute=0, tzinfo=timezone.u
 stop = datetime(year=2099, month=1, day=1, tzinfo=timezone.utc)
 
 # specify DBC path
-dbc_path = r"CSS-Electronics-SAE-J1939-DEMO.dbc"
+dbc_path = r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"
 
 # ---------------------------------------------------
 # initialize DBC converter and file loader
