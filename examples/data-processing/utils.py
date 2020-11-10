@@ -62,91 +62,100 @@ class MultiFrameDecoder:
 
     :param df_raw:                      dataframe of raw CAN data from the mdf_iter module
     :param res_id_list_hex:             list of transport protocol 'response CAN IDs' to process
-    :param FRAME_TYPE_MASK:             mask used in identifying frame type based on 1st byte
+    :param SINGLE_FRAME_MASK:           mask used in matching single frames
+    :param FIRST_FRAME_MASK:            mask used in matching first frames
+    :param CONSEQ_FRAME_MASK:           mask used in matching consequtive frames
     :param SINGLE_FRAME:                frame type reflecting a single frame response
     :param FIRST_FRAME:                 frame type reflecting the first frame in a multi frame response
     :param CONSEQ_FRAME:                frame type reflecting a consequtive frame in a multi frame response
     :param first_frame_payload_start:   the combined payload will start at this byte in the FIRST_FRAME
     """
 
-    def __init__(
-        self,
-        df_raw,
-        res_id_list_hex,
-        FRAME_TYPE_MASK=0xF0,
-        SINGLE_FRAME=0x00,
-        FIRST_FRAME=0x10,
-        CONSEQ_FRAME=0x20,
-        first_frame_payload_start=2,
-    ):
+    def __init__(self, df_raw, res_id_list_hex):
         self.df_raw = df_raw
         self.res_id_list_hex = res_id_list_hex
-        self.FRAME_TYPE_MASK = FRAME_TYPE_MASK
-        self.SINGLE_FRAME = SINGLE_FRAME
-        self.FIRST_FRAME = FIRST_FRAME
-        self.CONSEQ_FRAME = CONSEQ_FRAME
-        self.first_frame_payload_start = first_frame_payload_start
         self.res_id_list = [int(res_id, 16) for res_id in self.res_id_list_hex]
 
         return
 
-    def construct_new_frame(self, base_frame, payload_concatenated):
+    def construct_new_tp_frame(self, base_frame, payload_concatenated):
         new_frame = base_frame
         new_frame.at["DataBytes"] = payload_concatenated
         new_frame.at["DLC"] = 0
         new_frame.at["DataLength"] = len(payload_concatenated)
         return new_frame
 
-    def combine_multiframes(self):
+    def combine_tp_frames(
+        self,
+        SINGLE_FRAME_MASK,
+        FIRST_FRAME_MASK,
+        CONSEQ_FRAME_MASK,
+        SINGLE_FRAME,
+        FIRST_FRAME,
+        CONSEQ_FRAME,
+        first_frame_payload_start,
+        conseq_frame_payload_start,
+    ):
         import pandas as pd
 
-        for res_id in self.res_id_list:
-            # filter raw data for response ID and extract a 'base frame'
-            df_raw_filter = self.df_raw[self.df_raw["ID"] == res_id]
-            base_frame = df_raw_filter.iloc[0]
+        df_raw_combined = pd.DataFrame()
 
-            frame_list = []
-            frame_timestamp_list = []
-            payload_concatenated = []
+        for channel, df_raw in self.df_raw.groupby("BusChannel"):
 
-            # iterate through rows in filtered dataframe
-            for index, row in df_raw_filter.iterrows():
-                payload = row["DataBytes"]
-                first_byte = payload[0]
+            for res_id in self.res_id_list:
+                # filter raw data for response ID and extract a 'base frame'
+                df_raw_filter = self.df_raw[self.df_raw["ID"] == res_id]
 
-                # if single frame, save frame directly (excl. 1st byte)
-                if first_byte & self.FRAME_TYPE_MASK == self.SINGLE_FRAME:
-                    new_frame = self.construct_new_frame(base_frame, payload[1:])
-                    frame_list.append(new_frame.values.tolist())
-                    frame_timestamp_list.append(index)
+                if df_raw_filter.empty:
+                    continue
 
-                # if first frame, save info from prior multi frame response sequence,
-                # then initialize a new sequence incl. the first frame payload (excl. 1st and 2nd byte)
-                if first_byte & self.FRAME_TYPE_MASK == self.FIRST_FRAME:
-                    # create a new frame using information from previous iterations
-                    if len(payload_concatenated) > 0:
-                        new_frame = self.construct_new_frame(base_frame, payload_concatenated)
+                base_frame = df_raw_filter.iloc[0]
+
+                frame_list = []
+                frame_timestamp_list = []
+                payload_concatenated = []
+
+                # iterate through rows in filtered dataframe
+                for index, row in df_raw_filter.iterrows():
+                    payload = row["DataBytes"]
+                    first_byte = payload[0]
+
+                    # if single frame, save frame directly (excl. 1st byte)
+                    if first_byte & SINGLE_FRAME_MASK == SINGLE_FRAME:
+                        new_frame = self.construct_new_tp_frame(base_frame, payload[1:])
                         frame_list.append(new_frame.values.tolist())
-                        frame_timestamp_list.append(frame_timestamp)
+                        frame_timestamp_list.append(index)
 
-                    # reset and start on next frame
-                    payload_concatenated = []
-                    frame_timestamp = index
-                    for byte in payload[self.first_frame_payload_start :]:
-                        payload_concatenated.append(byte)
+                    # if first frame, save info from prior multi frame response sequence,
+                    # then initialize a new sequence incl. the first frame payload (excl. 1st and 2nd byte)
+                    elif first_byte & FIRST_FRAME_MASK == FIRST_FRAME:
+                        # create a new frame using information from previous iterations
+                        if len(payload_concatenated) > 0:
+                            new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated)
+                            frame_list.append(new_frame.values.tolist())
+                            frame_timestamp_list.append(frame_timestamp)
 
-                # if consequtive frame, extend payload with payload excl. 1st byte
-                if first_byte & self.FRAME_TYPE_MASK == self.CONSEQ_FRAME:
-                    for byte in payload[1:]:
-                        payload_concatenated.append(byte)
+                        # reset and start on next frame
+                        payload_concatenated = []
+                        frame_timestamp = index
+                        for byte in payload[first_frame_payload_start:]:
+                            payload_concatenated.append(byte)
 
-            df_raw_tp = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
-            df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
-            df_raw_combined = df_raw_excl_tp.append(df_raw_tp).sort_index()
-            df_raw_combined.index.name = "TimeStamp"
+                    # if consequtive frame, extend payload with payload excl. 1st byte
+                    elif first_byte & CONSEQ_FRAME_MASK == CONSEQ_FRAME:
+                        for byte in payload[conseq_frame_payload_start:]:
+                            payload_concatenated.append(byte)
+
+                df_raw_tp = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
+                df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
+                df_raw_combined = df_raw_excl_tp.append(df_raw_tp)
+                df_raw_combined.index.name = "TimeStamp"
+
+            df_raw_combined = df_raw_combined.sort_index()
+
             return df_raw_combined
 
-    def decode_multiframe_data(self, df_raw_combined, df_decoder):
+    def decode_tp_data(self, df_raw_combined, df_decoder):
         import pandas as pd
 
         df_phys_list = []
@@ -160,3 +169,47 @@ class MultiFrameDecoder:
 
         df_phys = df_phys.sort_index()
         return df_phys
+
+    def combine_tp_frames_uds(self):
+
+        SINGLE_FRAME_MASK = 0xFF
+        FIRST_FRAME_MASK = 0xF0
+        CONSEQ_FRAME_MASK = 0xF0
+        SINGLE_FRAME = 0x00
+        FIRST_FRAME = 0x10
+        CONSEQ_FRAME = 0x20
+        first_frame_payload_start = 2
+        conseq_frame_payload_start = 1
+
+        return self.combine_tp_frames(
+            SINGLE_FRAME_MASK,
+            FIRST_FRAME_MASK,
+            CONSEQ_FRAME_MASK,
+            SINGLE_FRAME,
+            FIRST_FRAME,
+            CONSEQ_FRAME,
+            first_frame_payload_start,
+            conseq_frame_payload_start,
+        )
+
+    def combine_tp_frames_nmea(self):
+
+        SINGLE_FRAME_MASK = 0xFF
+        FIRST_FRAME_MASK = 0x0F
+        CONSEQ_FRAME_MASK = 0x00
+        SINGLE_FRAME = 0xFF
+        FIRST_FRAME = 0x00
+        CONSEQ_FRAME = 0x00
+        first_frame_payload_start = 0
+        conseq_frame_payload_start = 1
+
+        return self.combine_tp_frames(
+            SINGLE_FRAME_MASK,
+            FIRST_FRAME_MASK,
+            CONSEQ_FRAME_MASK,
+            SINGLE_FRAME,
+            FIRST_FRAME,
+            CONSEQ_FRAME,
+            first_frame_payload_start,
+            conseq_frame_payload_start,
+        )
