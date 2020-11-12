@@ -20,8 +20,10 @@ For some use cases the below examples may be useful:
 
 ---
 
-## Requirements
-We recommend to install script dependencies via the `requirements.txt` in each folder:  
+## Installation
+We recommend to install Python 3.7 for Windows ([https://www.python.org/ftp/python/3.7.9/python-3.7.9.exe](32 bit)/[https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe](64 bit)) or [Linux](https://www.python.org/downloads/release/python-379/).
+
+Next, intall script dependencies via the `requirements.txt` in each folder:  
   ``pip install -r requirements.txt``
 
 ### Platforms supported
