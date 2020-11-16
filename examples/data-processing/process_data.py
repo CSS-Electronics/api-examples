@@ -15,9 +15,10 @@ devices = ["LOG/958D2219"]
 start = datetime(year=2020, month=1, day=13, hour=0, minute=0, tzinfo=timezone.utc)
 stop = datetime(year=2099, month=1, day=1, tzinfo=timezone.utc)
 
-# specify DBC path
+# specify DBC path and optionally specific subset of signals to process
 base_path = Path(__file__).parent
 dbc_path = base_path / r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"
+signal_list = []
 
 # ---------------------------------------------------
 # initialize DBC converter and file loader
@@ -44,6 +45,10 @@ for log_file in log_files:
 
     # extract all DBC decodable signals and print dataframe
     df_phys = df_decoder.decode_frame(df_raw)
+
+    if len(signal_list):
+        df_phys = df_phys[df_phys["Signal"].isin(signal_list)]
+
     print(f"Extracted {len(df_phys)} DBC decoded frames")
     path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
 
