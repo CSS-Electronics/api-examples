@@ -69,6 +69,7 @@ class MultiFrameDecoder:
     :param FIRST_FRAME:                 frame type reflecting the first frame in a multi frame response
     :param CONSEQ_FRAME:                frame type reflecting a consequtive frame in a multi frame response
     :param first_frame_payload_start:   the combined payload will start at this byte in the FIRST_FRAME
+    :param bam_id_hex:                  used in e.g. J1939, this marks the initial BAM message ID in HEX
     """
 
     def __init__(self, df_raw, res_id_list_hex):
@@ -78,11 +79,15 @@ class MultiFrameDecoder:
 
         return
 
-    def construct_new_tp_frame(self, base_frame, payload_concatenated):
+    def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
         new_frame = base_frame
         new_frame.at["DataBytes"] = payload_concatenated
         new_frame.at["DLC"] = 0
         new_frame.at["DataLength"] = len(payload_concatenated)
+
+        if can_id:
+            new_frame.at["ID"] = can_id
+
         return new_frame
 
     def combine_tp_frames(
@@ -95,6 +100,7 @@ class MultiFrameDecoder:
         CONSEQ_FRAME,
         first_frame_payload_start,
         conseq_frame_payload_start,
+        bam_id_hex="",
     ):
         import pandas as pd
 
@@ -104,7 +110,12 @@ class MultiFrameDecoder:
 
             for res_id in self.res_id_list:
                 # filter raw data for response ID and extract a 'base frame'
-                df_raw_filter = self.df_raw[self.df_raw["ID"] == res_id]
+                if bam_id_hex == "":
+                    bam_id = 0
+                else:
+                    bam_id = int(bam_id_hex, 16)
+
+                df_raw_filter = self.df_raw[self.df_raw["ID"].isin([res_id, bam_id])]
 
                 if df_raw_filter.empty:
                     continue
@@ -114,11 +125,13 @@ class MultiFrameDecoder:
                 frame_list = []
                 frame_timestamp_list = []
                 payload_concatenated = []
+                can_id = None
 
                 # iterate through rows in filtered dataframe
                 for index, row in df_raw_filter.iterrows():
                     payload = row["DataBytes"]
                     first_byte = payload[0]
+                    row_id = row["ID"]
 
                     # if single frame, save frame directly (excl. 1st byte)
                     if first_byte & SINGLE_FRAME_MASK == SINGLE_FRAME:
@@ -127,17 +140,24 @@ class MultiFrameDecoder:
                         frame_timestamp_list.append(index)
 
                     # if first frame, save info from prior multi frame response sequence,
-                    # then initialize a new sequence incl. the first frame payload (excl. 1st and 2nd byte)
-                    elif first_byte & FIRST_FRAME_MASK == FIRST_FRAME:
+                    # then initialize a new sequence incl. the first frame payload
+                    elif (first_byte & FIRST_FRAME_MASK == FIRST_FRAME & bam_id == "") or (bam_id == row_id):
                         # create a new frame using information from previous iterations
                         if len(payload_concatenated) > 0:
-                            new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated)
+                            new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated, can_id)
                             frame_list.append(new_frame.values.tolist())
                             frame_timestamp_list.append(frame_timestamp)
 
                         # reset and start on next frame
                         payload_concatenated = []
                         frame_timestamp = index
+
+                        # for J1939 BAM, extract PGN and convert to 29 bit CAN ID for use in baseframe
+                        if bam_id_hex != "":
+                            pgn_hex = "".join("{:02x}".format(x) for x in reversed(payload[5:8]))
+                            pgn = int(pgn_hex, 16)
+                            can_id = (6 << 26) | (pgn << 8) | 254
+
                         for byte in payload[first_frame_payload_start:]:
                             payload_concatenated.append(byte)
 
@@ -212,4 +232,27 @@ class MultiFrameDecoder:
             CONSEQ_FRAME,
             first_frame_payload_start,
             conseq_frame_payload_start,
+        )
+
+    def combine_tp_frames_j1939(self, bam_id_hex):
+
+        SINGLE_FRAME_MASK = 0xFF
+        FIRST_FRAME_MASK = 0xFF
+        CONSEQ_FRAME_MASK = 0x00
+        SINGLE_FRAME = 0xFF
+        FIRST_FRAME = 0x20
+        CONSEQ_FRAME = 0x00
+        first_frame_payload_start = 8
+        conseq_frame_payload_start = 1
+
+        return self.combine_tp_frames(
+            SINGLE_FRAME_MASK,
+            FIRST_FRAME_MASK,
+            CONSEQ_FRAME_MASK,
+            SINGLE_FRAME,
+            FIRST_FRAME,
+            CONSEQ_FRAME,
+            first_frame_payload_start,
+            conseq_frame_payload_start,
+            bam_id_hex,
         )

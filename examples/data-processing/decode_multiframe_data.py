@@ -29,6 +29,9 @@ def process_tp_example(devices, dbc_path, res_id_list_hex, tp_type):
             df_raw_combined = tp.combine_tp_frames_uds()
         elif tp_type == "nmea":
             df_raw_combined = tp.combine_tp_frames_nmea()
+        elif tp_type == "j1939":
+            bam_id_hex = "0x1CECFF00"
+            df_raw_combined = tp.combine_tp_frames_j1939(bam_id_hex)
 
         # decode the data using multiplexing DBC (similar to OBD2 logic):
         df_phys = tp.decode_tp_data(df_raw_combined, df_decoder)
@@ -59,3 +62,9 @@ res_id_list_hex = ["0x1DEFFF00"]
 dbc_path = r"dbc_files/tp_nmea.dbc"
 
 process_tp_example(devices, dbc_path, res_id_list_hex, "nmea")
+
+devices = ["LOG_TP/FCBF0606"]
+res_id_list_hex = ["0x1CEBFF00"]
+dbc_path = r"dbc_files/tp_j1939.dbc"
+
+process_tp_example(devices, dbc_path, res_id_list_hex, "j1939")
