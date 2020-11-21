@@ -23,7 +23,7 @@ dbc_path = r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"
 db = can_decoder.load_dbc(dbc_path)
 df_decoder = can_decoder.DataFrameDecoder(db)
 
-fs = setup_fs()
+fs = setup_fs(s3=False)
 
 # List log files based on inputs and select first log file
 log_files = canedge_browser.get_log_files(fs, devices, start_date=start, stop_date=stop)

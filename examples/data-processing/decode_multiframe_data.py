@@ -11,7 +11,7 @@ def process_tp_example(devices, dbc_path, res_id_list_hex, tp_type):
 
     db = can_decoder.load_dbc(dbc_path)
     df_decoder = can_decoder.DataFrameDecoder(db)
-    fs = setup_fs()
+    fs = setup_fs(s3=False)
 
     # List log files based on inputs, select first log file and load raw data
     log_files = canedge_browser.get_log_files(fs, devices)

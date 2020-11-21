@@ -1,31 +1,23 @@
-def setup_fs_s3():
-    """Helper function to setup a remote S3 filesystem connection.
+def setup_fs(s3, key="", secret="", endpoint="", cert=""):
+    """Given a boolean specifying whether to use local disk or S3, setup filesystem
     """
-    import s3fs
 
-    fs = s3fs.S3FileSystem(
-        key="<key>",
-        secret="<secret>",
-        client_kwargs={
-            "endpoint_url": "<endpoint>",
-            # "verify": "path\\to\\public_certificate.crt",  # for TLS enabled MinIO servers
-        },
-    )
+    if s3:
+        import s3fs
 
-    return fs
+        if "amazonaws" in endpoint:
+            fs = s3fs.S3FileSystem(key=key, secret=secret)
+        elif cert != "":
+            fs = s3fs.S3FileSystem(key=key, secret=secret, client_kwargs={"endpoint_url": endpoint, "verify": cert})
+        else:
+            fs = s3fs.S3FileSystem(key=key, secret=secret, client_kwargs={"endpoint_url": endpoint},)
 
+    else:
+        from pathlib import Path
+        import canedge_browser
 
-def setup_fs():
-    """Helper function to setup the file system.
-    """
-    from pathlib import Path
-    import canedge_browser
-
-    base_path = Path(__file__).parent
-
-    # Setup path to local folder structure, as if copied from a CANedge SD.
-    # Assumes the folder is placed in same directory as this file
-    fs = canedge_browser.LocalFileSystem(base_path=base_path)
+        base_path = Path(__file__).parent
+        fs = canedge_browser.LocalFileSystem(base_path=base_path)
 
     return fs
 

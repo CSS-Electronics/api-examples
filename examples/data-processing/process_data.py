@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
 
-from utils import setup_fs, setup_fs_s3
+from utils import setup_fs
 
 # specify which devices to process (from local folder or S3 bucket)
 devices = ["LOG/958D2219"]
@@ -15,26 +15,21 @@ devices = ["LOG/958D2219"]
 start = datetime(year=2020, month=1, day=13, hour=0, minute=0, tzinfo=timezone.utc)
 stop = datetime(year=2099, month=1, day=1, tzinfo=timezone.utc)
 
-# specify DBC path and optionally specific subset of signals to process
+# specify list of DBC paths and optionally a list of signals to process
 base_path = Path(__file__).parent
-dbc_path = base_path / r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"
+dbc_paths = [base_path / r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
 signal_list = []
 
 # ---------------------------------------------------
-# initialize DBC converter and file loader
-db = can_decoder.load_dbc(dbc_path)
-df_decoder = can_decoder.DataFrameDecoder(db)
+# initialize file loader and list log files
+fs = setup_fs(s3=False)
 
-# fs = setup_fs_s3()
-fs = setup_fs()
-
-# List log files based on inputs
 log_files = canedge_browser.get_log_files(fs, devices, start_date=start, stop_date=stop)
 print(f"Found a total of {len(log_files)} log files")
-
 df_concat = []
 
 # -----------------------------------------
+# loop through DBC files, log files and CAN channels
 for log_file in log_files:
     # open log file, get device id and extract dataframe with raw CAN data
     print(f"\nProcessing log file: {log_file}")
@@ -43,30 +38,34 @@ for log_file in log_files:
         device_id = mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
         df_raw = mdf_file.get_data_frame()
 
-    # extract all DBC decodable signals and print dataframe
-    df_phys = df_decoder.decode_frame(df_raw)
+    for dbc_path in dbc_paths:
+        db = can_decoder.load_dbc(dbc_path)
+        df_decoder = can_decoder.DataFrameDecoder(db)
 
-    if len(signal_list):
-        df_phys = df_phys[df_phys["Signal"].isin(signal_list)]
+        # extract all DBC decodable signals and print dataframe
+        df_phys = df_decoder.decode_frame(df_raw)
 
-    print(f"Extracted {len(df_phys)} DBC decoded frames")
-    path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
+        if len(signal_list):
+            df_phys = df_phys[df_phys["Signal"].isin(signal_list)]
 
-    if df_phys.empty:
-        continue
+        print(f"Extracted {len(df_phys)} DBC decoded frames")
+        path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
 
-    df_phys.to_csv(base_path / path)
+        if df_phys.empty:
+            continue
 
-    # create a list of the individual DBC decoded dataframes:
-    df_concat.append(df_phys)
+        df_phys.to_csv(base_path / path)
 
-    # group the data to enable a signal-by-signal loop
-    df_phys_grouped = df_phys.groupby("Signal")["Physical Value"]
+        # create a list of the individual DBC decoded dataframes:
+        df_concat.append(df_phys)
 
-    # for each signal perform some processing
-    for signal, signal_data in df_phys_grouped:
-        print(f"- {signal}: {len(signal_data)} frames")
-        # print(signal_data)
+        # group the data to enable a signal-by-signal loop
+        df_phys_grouped = df_phys.groupby("Signal")["Physical Value"]
+
+        # for each signal perform some processing
+        for signal, signal_data in df_phys_grouped:
+            print(f"- {signal}: {len(signal_data)} frames")
+            # print(signal_data)
 
 # create a concatenated dataframe based on the individual dataframes
 df_concat = pd.concat(df_concat)
