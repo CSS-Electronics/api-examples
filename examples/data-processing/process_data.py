@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
 
-from utils import setup_fs
+from utils import setup_fs, get_device_id, load_dbc_files, extract_phys
 
 # specify which devices to process (from local folder or S3 bucket)
 devices = ["LOG/958D2219"]
@@ -21,9 +21,10 @@ dbc_paths = [base_path / r"dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
 signal_list = []
 
 # ---------------------------------------------------
-# initialize file loader and list log files
+# initialize file loader and list log files from local disk
 fs = setup_fs(s3=False)
 
+db_list = load_dbc_files(dbc_paths)
 log_files = canedge_browser.get_log_files(fs, devices, start_date=start, stop_date=stop)
 print(f"Found a total of {len(log_files)} log files")
 df_concat = []
@@ -35,48 +36,44 @@ for log_file in log_files:
     print(f"\nProcessing log file: {log_file}")
     with fs.open(log_file, "rb") as handle:
         mdf_file = mdf_iter.MdfFile(handle)
-        device_id = mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
+        device_id = get_device_id(mdf_file)
         df_raw = mdf_file.get_data_frame()
 
-    for dbc_path in dbc_paths:
-        db = can_decoder.load_dbc(dbc_path)
-        df_decoder = can_decoder.DataFrameDecoder(db)
+    df_phys = extract_phys(df_raw, db_list)
 
-        # extract all DBC decodable signals and print dataframe
-        df_phys = df_decoder.decode_frame(df_raw)
+    if len(signal_list):
+        df_phys = df_phys[df_phys["Signal"].isin(signal_list)]
 
-        if len(signal_list):
-            df_phys = df_phys[df_phys["Signal"].isin(signal_list)]
+    path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
 
-        print(f"Extracted {len(df_phys)} DBC decoded frames")
-        path = device_id + log_file.split(device_id)[1].replace("MF4", "csv").replace("/", "_")
+    if df_phys.empty:
+        print("No signals were extracted")
+        continue
 
-        if df_phys.empty:
-            continue
+    # save decoded dataframe as CSV and append to list:
+    df_phys.to_csv(base_path / path)
+    df_concat.append(df_phys)
 
-        df_phys.to_csv(base_path / path)
+    # group the data to enable a signal-by-signal loop
+    df_phys_grouped = df_phys.groupby("Signal")["Physical Value"]
 
-        # create a list of the individual DBC decoded dataframes:
-        df_concat.append(df_phys)
-
-        # group the data to enable a signal-by-signal loop
-        df_phys_grouped = df_phys.groupby("Signal")["Physical Value"]
-
-        # for each signal perform some processing
-        for signal, signal_data in df_phys_grouped:
-            print(f"- {signal}: {len(signal_data)} frames")
-            # print(signal_data)
-
-# create a concatenated dataframe based on the individual dataframes
-df_concat = pd.concat(df_concat)
-print(f"\nConcatenated all {len(df_concat)} decoded frames into one dataframe")
+    # for each signal perform some processing
+    for signal, signal_data in df_phys_grouped:
+        print(f"- {signal}: {len(signal_data)} frames extracted")
 
 # -----------------------------------------
-# restructure dataframe to have resampled signals in columns & save as CSV
-df_join = pd.DataFrame({"TimeStamp": []})
-for signal, signal_data in df_concat.groupby("Signal"):
-    df_join = pd.merge_ordered(
-        df_join, signal_data["Physical Value"].rename(signal).resample("1S").pad().dropna(), on="TimeStamp", fill_method="none",
-    )
+# concatenate dataframes and restructure to have resampled signals in columns
+if len(df_concat):
+    df_concat = pd.concat(df_concat)
+    print(f"\nConcatenated all {len(df_concat)} decoded frames into one dataframe")
 
-df_join.set_index("TimeStamp").to_csv(base_path / "output_joined.csv")
+    df_join = pd.DataFrame({"TimeStamp": []})
+    for signal, signal_data in df_concat.groupby("Signal"):
+        df_join = pd.merge_ordered(
+            df_join,
+            signal_data["Physical Value"].rename(signal).resample("1S").pad().dropna(),
+            on="TimeStamp",
+            fill_method="none",
+        )
+
+    df_join.set_index("TimeStamp").to_csv(base_path / "output_joined.csv")

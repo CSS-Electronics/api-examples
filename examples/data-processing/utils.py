@@ -1,5 +1,11 @@
 def setup_fs(s3, key="", secret="", endpoint="", cert=""):
-    """Given a boolean specifying whether to use local disk or S3, setup filesystem
+    """Given a boolean specifying whether to use local disk or S3, setup filesystem.
+
+    Below are endpoint syntax examples:
+    - AWS: http://s3.us-east-2.amazonaws.com
+    - MinIO: http://192.168.0.1:9000
+
+    The cert input is relevant if you're using MinIO with TLS enabled, for specifying the path to the certficiate
     """
 
     if s3:
@@ -22,6 +28,28 @@ def setup_fs(s3, key="", secret="", endpoint="", cert=""):
     return fs
 
 
+# -----------------------------------------------
+def extract_phys(df_raw, db_list):
+    """Given a dataframe of raw CAN data and a list of decoding databases,
+    this extracts the physical values for each database and creates a new
+    dataframe of unique physical values
+    """
+    import can_decoder
+    import pandas as pd
+
+    df_phys = pd.DataFrame()
+    for db in db_list:
+        df_decoder = can_decoder.DataFrameDecoder(db)
+        df_phys = df_phys.append(df_decoder.decode_frame(df_raw))
+
+    df_phys["datetime"] = df_phys.index
+    df_phys = df_phys.drop_duplicates(keep="first")
+    df_phys = df_phys.drop("datetime", 1)
+
+    return df_phys
+
+
+# -----------------------------------------------
 def custom_sig(df, signal1, signal2, function, new_signal):
     """Helper function for calculating a new signal based on two signals and a function.
     Returns a dataframe with the new signal name and physical values
@@ -45,6 +73,29 @@ def custom_sig(df, signal1, signal2, function, new_signal):
         return pd.DataFrame()
 
 
+# -----------------------------------------------
+def get_device_id(mdf_file):
+    """Extract device ID (serial number) from MDF4 log file
+        """
+    return mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
+
+
+# -----------------------------------------------
+def load_dbc_files(dbc_paths):
+    """Given a list of DBC file paths, create a list of conversion rule databases
+    """
+    import can_decoder
+    from pathlib import Path
+
+    db_list = []
+    for dbc in dbc_paths:
+        db = can_decoder.load_dbc(Path(__file__).parent / dbc)
+        db_list.append(db)
+
+    return db_list
+
+
+# -----------------------------------------------
 class MultiFrameDecoder:
     """BETA class for handling transport protocol data. For each response ID, identify
     sequences of subsequent frames and combine the relevant parts of the data payloads
@@ -92,14 +143,19 @@ class MultiFrameDecoder:
         CONSEQ_FRAME,
         first_frame_payload_start,
         conseq_frame_payload_start,
+        tp_type="",
         bam_id_hex="",
     ):
         import pandas as pd
+        import sys
 
         df_raw_combined = pd.DataFrame()
 
-        for channel, df_raw in self.df_raw.groupby("BusChannel"):
+        df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
+        df_raw_excl_tp.to_csv("test.csv")
+        df_raw_combined = df_raw_excl_tp
 
+        for channel, df_raw_channel in self.df_raw.groupby("BusChannel"):
             for res_id in self.res_id_list:
                 # filter raw data for response ID and extract a 'base frame'
                 if bam_id_hex == "":
@@ -107,7 +163,7 @@ class MultiFrameDecoder:
                 else:
                     bam_id = int(bam_id_hex, 16)
 
-                df_raw_filter = self.df_raw[self.df_raw["ID"].isin([res_id, bam_id])]
+                df_raw_filter = df_raw_channel[df_raw_channel["ID"].isin([res_id, bam_id])]
 
                 if df_raw_filter.empty:
                     continue
@@ -117,7 +173,9 @@ class MultiFrameDecoder:
                 frame_list = []
                 frame_timestamp_list = []
                 payload_concatenated = []
+                ff_length = 0xFFF
                 can_id = None
+                conseq_frame_prev = None
 
                 # iterate through rows in filtered dataframe
                 for index, row in df_raw_filter.iterrows():
@@ -127,21 +185,22 @@ class MultiFrameDecoder:
 
                     # if single frame, save frame directly (excl. 1st byte)
                     if first_byte & SINGLE_FRAME_MASK == SINGLE_FRAME:
-                        new_frame = self.construct_new_tp_frame(base_frame, payload[1:])
+                        new_frame = self.construct_new_tp_frame(base_frame, payload, row_id)
                         frame_list.append(new_frame.values.tolist())
                         frame_timestamp_list.append(index)
 
                     # if first frame, save info from prior multi frame response sequence,
                     # then initialize a new sequence incl. the first frame payload
-                    elif (first_byte & FIRST_FRAME_MASK == FIRST_FRAME & bam_id == "") or (bam_id == row_id):
+                    elif ((first_byte & FIRST_FRAME_MASK == FIRST_FRAME) & (bam_id_hex == "")) or (bam_id == row_id):
                         # create a new frame using information from previous iterations
-                        if len(payload_concatenated) > 0:
+                        if len(payload_concatenated) >= ff_length:
                             new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated, can_id)
                             frame_list.append(new_frame.values.tolist())
                             frame_timestamp_list.append(frame_timestamp)
 
                         # reset and start on next frame
                         payload_concatenated = []
+                        conseq_frame_prev = None
                         frame_timestamp = index
 
                         # for J1939 BAM, extract PGN and convert to 29 bit CAN ID for use in baseframe
@@ -150,48 +209,77 @@ class MultiFrameDecoder:
                             pgn = int(pgn_hex, 16)
                             can_id = (6 << 26) | (pgn << 8) | 254
 
+                        if tp_type == "uds":
+                            ff_length = (payload[0] & 0x0F) << 8 | payload[1]
+
                         for byte in payload[first_frame_payload_start:]:
                             payload_concatenated.append(byte)
 
                     # if consequtive frame, extend payload with payload excl. 1st byte
                     elif first_byte & CONSEQ_FRAME_MASK == CONSEQ_FRAME:
-                        for byte in payload[conseq_frame_payload_start:]:
-                            payload_concatenated.append(byte)
+                        if (conseq_frame_prev == None) or ((first_byte - conseq_frame_prev) == 1):
+                            conseq_frame_prev = first_byte
+                            for byte in payload[conseq_frame_payload_start:]:
+                                payload_concatenated.append(byte)
 
                 df_raw_tp = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
-                df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
-                df_raw_combined = df_raw_excl_tp.append(df_raw_tp)
-                df_raw_combined.index.name = "TimeStamp"
+                df_raw_combined = df_raw_combined.append(df_raw_tp)
 
-            df_raw_combined = df_raw_combined.sort_index()
+        df_raw_combined.index.name = "TimeStamp"
+        df_raw_combined = df_raw_combined.sort_index()
 
-            return df_raw_combined
+        return df_raw_combined
 
     def decode_tp_data(self, df_raw_combined, df_decoder):
         import pandas as pd
 
         df_phys_list = []
+
         # to process data with variable payload lengths for the same ID
         # it needs to be processed group-by-group based on the data length:
-        df_grouped = df_raw_combined.groupby("DataLength")
-        df_phys = pd.DataFrame()
-        for length, group in df_grouped:
-            df_phys_group = df_decoder.decode_frame(group)
-            df_phys = df_phys.append(df_phys_group)
+        if df_raw_combined.empty:
+            return df_raw_combined
+        else:
+            df_grouped = df_raw_combined.groupby("DataLength")
+            df_phys = pd.DataFrame()
+            for length, group in df_grouped:
+                df_phys_group = df_decoder.decode_frame(group)
+                df_phys = df_phys.append(df_phys_group)
 
-        df_phys = df_phys.sort_index()
-        return df_phys
+            df_phys = df_phys.sort_index()
+            return df_phys
 
-    def combine_tp_frames_uds(self):
-
-        SINGLE_FRAME_MASK = 0xFF
-        FIRST_FRAME_MASK = 0xF0
-        CONSEQ_FRAME_MASK = 0xF0
-        SINGLE_FRAME = 0x00
-        FIRST_FRAME = 0x10
-        CONSEQ_FRAME = 0x20
-        first_frame_payload_start = 2
+    def combine_tp_frames_by_type(self, tp_type):
         conseq_frame_payload_start = 1
+        bam_id_hex = ""
+
+        if tp_type == "uds":
+            SINGLE_FRAME_MASK = 0xF0
+            FIRST_FRAME_MASK = 0xF0
+            CONSEQ_FRAME_MASK = 0xF0
+            SINGLE_FRAME = 0x00
+            FIRST_FRAME = 0x10
+            CONSEQ_FRAME = 0x20
+            first_frame_payload_start = 2
+
+        if tp_type == "j1939":
+            SINGLE_FRAME_MASK = 0xFF
+            FIRST_FRAME_MASK = 0xFF
+            CONSEQ_FRAME_MASK = 0x00
+            SINGLE_FRAME = 0xFF
+            FIRST_FRAME = 0x20
+            CONSEQ_FRAME = 0x00
+            first_frame_payload_start = 8
+            bam_id_hex = "0x1CECFF00"
+
+        if tp_type == "nmea":
+            SINGLE_FRAME_MASK = 0xFF
+            FIRST_FRAME_MASK = 0x0F
+            CONSEQ_FRAME_MASK = 0x00
+            SINGLE_FRAME = 0xFF
+            FIRST_FRAME = 0x00
+            CONSEQ_FRAME = 0x00
+            first_frame_payload_start = 0
 
         return self.combine_tp_frames(
             SINGLE_FRAME_MASK,
@@ -202,49 +290,6 @@ class MultiFrameDecoder:
             CONSEQ_FRAME,
             first_frame_payload_start,
             conseq_frame_payload_start,
-        )
-
-    def combine_tp_frames_nmea(self):
-
-        SINGLE_FRAME_MASK = 0xFF
-        FIRST_FRAME_MASK = 0x0F
-        CONSEQ_FRAME_MASK = 0x00
-        SINGLE_FRAME = 0xFF
-        FIRST_FRAME = 0x00
-        CONSEQ_FRAME = 0x00
-        first_frame_payload_start = 0
-        conseq_frame_payload_start = 1
-
-        return self.combine_tp_frames(
-            SINGLE_FRAME_MASK,
-            FIRST_FRAME_MASK,
-            CONSEQ_FRAME_MASK,
-            SINGLE_FRAME,
-            FIRST_FRAME,
-            CONSEQ_FRAME,
-            first_frame_payload_start,
-            conseq_frame_payload_start,
-        )
-
-    def combine_tp_frames_j1939(self, bam_id_hex):
-
-        SINGLE_FRAME_MASK = 0xFF
-        FIRST_FRAME_MASK = 0xFF
-        CONSEQ_FRAME_MASK = 0x00
-        SINGLE_FRAME = 0xFF
-        FIRST_FRAME = 0x20
-        CONSEQ_FRAME = 0x00
-        first_frame_payload_start = 8
-        conseq_frame_payload_start = 1
-
-        return self.combine_tp_frames(
-            SINGLE_FRAME_MASK,
-            FIRST_FRAME_MASK,
-            CONSEQ_FRAME_MASK,
-            SINGLE_FRAME,
-            FIRST_FRAME,
-            CONSEQ_FRAME,
-            first_frame_payload_start,
-            conseq_frame_payload_start,
+            tp_type,
             bam_id_hex,
         )

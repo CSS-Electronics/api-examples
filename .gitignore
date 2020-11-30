@@ -5,4 +5,7 @@
 *.png
 *.zip
 LOG_TP/
+LOG_TP_UDS/
 output/
+*j1939-speed.dbc
+*j1939-engine.dbc
