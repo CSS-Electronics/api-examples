@@ -152,7 +152,6 @@ class MultiFrameDecoder:
         df_raw_combined = pd.DataFrame()
 
         df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
-        df_raw_excl_tp.to_csv("test.csv")
         df_raw_combined = df_raw_excl_tp
 
         for channel, df_raw_channel in self.df_raw.groupby("BusChannel"):

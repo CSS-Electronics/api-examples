@@ -1,4 +1,4 @@
-asammdf==5.21.0
+asammdf==6.0.0
 attrs==19.3.0
 bitstruct==8.11.0
 canmatrix==0.9.1
