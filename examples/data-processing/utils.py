@@ -1,10 +1,6 @@
 def setup_fs(s3, key="", secret="", endpoint="", cert=""):
-    """Given a boolean specifying whether to use local disk or S3, setup filesystem.
-
-    Below are endpoint syntax examples:
-    - AWS: http://s3.us-east-2.amazonaws.com
-    - MinIO: http://192.168.0.1:9000
-
+    """Given a boolean specifying whether to use local disk or S3, setup filesystem
+    Syntax examples: AWS (http://s3.us-east-2.amazonaws.com), MinIO (http://192.168.0.1:9000)
     The cert input is relevant if you're using MinIO with TLS enabled, for specifying the path to the certficiate
     """
 
@@ -29,58 +25,6 @@ def setup_fs(s3, key="", secret="", endpoint="", cert=""):
 
 
 # -----------------------------------------------
-def extract_phys(df_raw, db_list):
-    """Given a dataframe of raw CAN data and a list of decoding databases,
-    this extracts the physical values for each database and creates a new
-    dataframe of unique physical values
-    """
-    import can_decoder
-    import pandas as pd
-
-    df_phys = pd.DataFrame()
-    for db in db_list:
-        df_decoder = can_decoder.DataFrameDecoder(db)
-        df_phys = df_phys.append(df_decoder.decode_frame(df_raw))
-
-    df_phys["datetime"] = df_phys.index
-    df_phys = df_phys.drop_duplicates(keep="first")
-    df_phys = df_phys.drop("datetime", 1)
-
-    return df_phys
-
-
-# -----------------------------------------------
-def custom_sig(df, signal1, signal2, function, new_signal):
-    """Helper function for calculating a new signal based on two signals and a function.
-    Returns a dataframe with the new signal name and physical values
-    """
-    import pandas as pd
-
-    try:
-        s1 = df[df["Signal"] == signal1]["Physical Value"].rename(signal1)
-        s2 = df[df["Signal"] == signal2]["Physical Value"].rename(signal2)
-
-        df_new_sig = pd.merge_ordered(s1, s2, on="TimeStamp", fill_method="ffill",).set_index("TimeStamp")
-
-        df_new_sig = df_new_sig.apply(lambda x: function(x[0], x[1]), axis=1).dropna().rename("Physical Value").to_frame()
-
-        df_new_sig["Signal"] = new_signal
-
-        return df_new_sig
-
-    except:
-        print(f"Warning: Custom signal {new_signal} not created\n")
-        return pd.DataFrame()
-
-
-# -----------------------------------------------
-def get_device_id(mdf_file):
-    """Extract device ID (serial number) from MDF4 log file
-        """
-    return mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
-
-
-# -----------------------------------------------
 def load_dbc_files(dbc_paths):
     """Given a list of DBC file paths, create a list of conversion rule databases
     """
@@ -96,199 +40,158 @@ def load_dbc_files(dbc_paths):
 
 
 # -----------------------------------------------
-class MultiFrameDecoder:
-    """BETA class for handling transport protocol data. For each response ID, identify
-    sequences of subsequent frames and combine the relevant parts of the data payloads
-    into a single payload with the response ID as the ID. The original raw dataframe is
-    then cleansed of the original response ID sequence frames. Instead, the new concatenated
-    frames are inserted. Further, the class supports DBC decoding of the resulting modified raw data
-
-    :param df_raw:                      dataframe of raw CAN data from the mdf_iter module
-    :param res_id_list_hex:             list of transport protocol 'response CAN IDs' to process
-    :param SINGLE_FRAME_MASK:           mask used in matching single frames
-    :param FIRST_FRAME_MASK:            mask used in matching first frames
-    :param CONSEQ_FRAME_MASK:           mask used in matching consequtive frames
-    :param SINGLE_FRAME:                frame type reflecting a single frame response
-    :param FIRST_FRAME:                 frame type reflecting the first frame in a multi frame response
-    :param CONSEQ_FRAME:                frame type reflecting a consequtive frame in a multi frame response
-    :param first_frame_payload_start:   the combined payload will start at this byte in the FIRST_FRAME
-    :param bam_id_hex:                  used in e.g. J1939, this marks the initial BAM message ID in HEX
+def list_log_files(fs, devices, start_times, verbose=True):
+    """Given a list of device paths, list log files from specified filesystem.
+    Data is loaded based on the list of start datetimes
     """
+    import canedge_browser, mdf_iter
 
-    def __init__(self, df_raw, res_id_list_hex):
-        self.df_raw = df_raw
-        self.res_id_list_hex = res_id_list_hex
-        self.res_id_list = [int(res_id, 16) for res_id in self.res_id_list_hex]
+    log_files = []
 
+    if len(start_times):
+        for idx, device in enumerate(devices):
+            start = start_times[idx]
+            log_files_device = canedge_browser.get_log_files(fs, [device], start_date=start)
+
+            # exclude the 1st log file if the last timestamp is before the start timestamp
+            if len(log_files_device) > 0:
+                with fs.open(log_files_device[0], "rb") as handle:
+                    mdf_file = mdf_iter.MdfFile(handle)
+                    df_raw = mdf_file.get_data_frame()
+                    end_time = df_raw.index[-1]
+
+                if end_time < start:
+                    log_files_device = log_files_device[1:]
+
+                log_files.extend(log_files_device)
+
+    if verbose:
+        print(f"Found {len(log_files)} log files\n")
+
+    return log_files
+
+
+def restructure_data(df_phys, res):
+    import pandas as pd
+
+    df_phys_join = pd.DataFrame({"TimeStamp": []})
+    if not df_phys.empty:
+        for signal, data in df_phys.groupby("Signal"):
+            df_phys_join = pd.merge_ordered(
+                df_phys_join,
+                data["Physical Value"].rename(signal).resample("1S").pad().dropna(),
+                on="TimeStamp",
+                fill_method="none",
+            ).set_index("TimeStamp")
+
+        df_phys_join.to_csv("output_joined.csv")
+
+    return df_phys_join
+
+
+def add_custom_sig(df_phys, signal1, signal2, function, new_signal):
+    """Helper function for calculating a new signal based on two signals and a function.
+    Returns a dataframe with the new signal name and physical values
+    """
+    import pandas as pd
+
+    try:
+        s1 = df_phys[df_phys["Signal"] == signal1]["Physical Value"].rename(signal1)
+        s2 = df_phys[df_phys["Signal"] == signal2]["Physical Value"].rename(signal2)
+
+        df_new_sig = pd.merge_ordered(s1, s2, on="TimeStamp", fill_method="ffill",).set_index("TimeStamp")
+        df_new_sig = df_new_sig.apply(lambda x: function(x[0], x[1]), axis=1).dropna().rename("Physical Value").to_frame()
+        df_new_sig["Signal"] = new_signal
+        df_phys = df_phys.append(df_new_sig)
+
+    except:
+        print(f"Warning: Custom signal {new_signal} not created\n")
+
+    return df_phys
+
+
+# -----------------------------------------------
+class ProcessData:
+    def __init__(self, fs, db_list, signals=[], days_offset=None, verbose=True):
+        self.db_list = db_list
+        self.signals = signals
+        self.fs = fs
+        self.days_offset = days_offset
+        self.verbose = verbose
         return
 
-    def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
-        new_frame = base_frame
-        new_frame.at["DataBytes"] = payload_concatenated
-        new_frame.at["DLC"] = 0
-        new_frame.at["DataLength"] = len(payload_concatenated)
-
-        if can_id:
-            new_frame.at["ID"] = can_id
-
-        return new_frame
-
-    def combine_tp_frames(
-        self,
-        SINGLE_FRAME_MASK,
-        FIRST_FRAME_MASK,
-        CONSEQ_FRAME_MASK,
-        SINGLE_FRAME,
-        FIRST_FRAME,
-        CONSEQ_FRAME,
-        first_frame_payload_start,
-        conseq_frame_payload_start,
-        tp_type="",
-        bam_id_hex="",
-    ):
-        import pandas as pd
-        import sys
-
-        df_raw_combined = pd.DataFrame()
-
-        df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
-        df_raw_combined = df_raw_excl_tp
-
-        for channel, df_raw_channel in self.df_raw.groupby("BusChannel"):
-            for res_id in self.res_id_list:
-                # filter raw data for response ID and extract a 'base frame'
-                if bam_id_hex == "":
-                    bam_id = 0
-                else:
-                    bam_id = int(bam_id_hex, 16)
-
-                df_raw_filter = df_raw_channel[df_raw_channel["ID"].isin([res_id, bam_id])]
-
-                if df_raw_filter.empty:
-                    continue
-
-                base_frame = df_raw_filter.iloc[0]
-
-                frame_list = []
-                frame_timestamp_list = []
-                payload_concatenated = []
-                ff_length = 0xFFF
-                can_id = None
-                conseq_frame_prev = None
-
-                # iterate through rows in filtered dataframe
-                for index, row in df_raw_filter.iterrows():
-                    payload = row["DataBytes"]
-                    first_byte = payload[0]
-                    row_id = row["ID"]
-
-                    # if single frame, save frame directly (excl. 1st byte)
-                    if first_byte & SINGLE_FRAME_MASK == SINGLE_FRAME:
-                        new_frame = self.construct_new_tp_frame(base_frame, payload, row_id)
-                        frame_list.append(new_frame.values.tolist())
-                        frame_timestamp_list.append(index)
-
-                    # if first frame, save info from prior multi frame response sequence,
-                    # then initialize a new sequence incl. the first frame payload
-                    elif ((first_byte & FIRST_FRAME_MASK == FIRST_FRAME) & (bam_id_hex == "")) or (bam_id == row_id):
-                        # create a new frame using information from previous iterations
-                        if len(payload_concatenated) >= ff_length:
-                            new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated, can_id)
-                            frame_list.append(new_frame.values.tolist())
-                            frame_timestamp_list.append(frame_timestamp)
-
-                        # reset and start on next frame
-                        payload_concatenated = []
-                        conseq_frame_prev = None
-                        frame_timestamp = index
-
-                        # for J1939 BAM, extract PGN and convert to 29 bit CAN ID for use in baseframe
-                        if bam_id_hex != "":
-                            pgn_hex = "".join("{:02x}".format(x) for x in reversed(payload[5:8]))
-                            pgn = int(pgn_hex, 16)
-                            can_id = (6 << 26) | (pgn << 8) | 254
-
-                        if tp_type == "uds":
-                            ff_length = (payload[0] & 0x0F) << 8 | payload[1]
-
-                        for byte in payload[first_frame_payload_start:]:
-                            payload_concatenated.append(byte)
-
-                    # if consequtive frame, extend payload with payload excl. 1st byte
-                    elif first_byte & CONSEQ_FRAME_MASK == CONSEQ_FRAME:
-                        if (conseq_frame_prev == None) or ((first_byte - conseq_frame_prev) == 1):
-                            conseq_frame_prev = first_byte
-                            for byte in payload[conseq_frame_payload_start:]:
-                                payload_concatenated.append(byte)
-
-                df_raw_tp = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
-                df_raw_combined = df_raw_combined.append(df_raw_tp)
-
-        df_raw_combined.index.name = "TimeStamp"
-        df_raw_combined = df_raw_combined.sort_index()
-
-        return df_raw_combined
-
-    def decode_tp_data(self, df_raw_combined, df_decoder):
+    def extract_phys(self, df_raw, tp_type=None):
+        """Given df of raw data and list of decoding databases, create new def with
+        physical values (no duplicate signals and optionally filtered/rebaselined)
+        """
+        import can_decoder
         import pandas as pd
 
-        df_phys_list = []
+        df_phys = pd.DataFrame()
+        for db in self.db_list:
+            df_decoder = can_decoder.DataFrameDecoder(db)
 
-        # to process data with variable payload lengths for the same ID
-        # it needs to be processed group-by-group based on the data length:
-        if df_raw_combined.empty:
-            return df_raw_combined
-        else:
-            df_grouped = df_raw_combined.groupby("DataLength")
-            df_phys = pd.DataFrame()
-            for length, group in df_grouped:
-                df_phys_group = df_decoder.decode_frame(group)
-                df_phys = df_phys.append(df_phys_group)
+            if tp_type != None:
+                df_phys_tp = pd.DataFrame()
+                for length, group in df_raw.groupby("DataLength"):
+                    df_phys_group = df_decoder.decode_frame(group)
+                    df_phys_tp = df_phys_tp.append(df_phys_group)
 
-            df_phys = df_phys.sort_index()
-            return df_phys
+                df_phys = df_phys.append(df_phys_tp.sort_index())
+            else:
+                df_phys = df_phys.append(df_decoder.decode_frame(df_raw))
 
-    def combine_tp_frames_by_type(self, tp_type):
-        conseq_frame_payload_start = 1
-        bam_id_hex = ""
+        # remove duplicates in case multiple DBC files contain identical signals
+        df_phys["datetime"] = df_phys.index
+        df_phys = df_phys.drop_duplicates(keep="first")
+        df_phys = df_phys.drop("datetime", 1)
 
-        if tp_type == "uds":
-            SINGLE_FRAME_MASK = 0xF0
-            FIRST_FRAME_MASK = 0xF0
-            CONSEQ_FRAME_MASK = 0xF0
-            SINGLE_FRAME = 0x00
-            FIRST_FRAME = 0x10
-            CONSEQ_FRAME = 0x20
-            first_frame_payload_start = 2
+        # optionally filter and rebaseline the data
+        df_phys = self.filter_signals(df_phys)
+        df_phys = self.rebaseline_data(df_phys)
 
-        if tp_type == "j1939":
-            SINGLE_FRAME_MASK = 0xFF
-            FIRST_FRAME_MASK = 0xFF
-            CONSEQ_FRAME_MASK = 0x00
-            SINGLE_FRAME = 0xFF
-            FIRST_FRAME = 0x20
-            CONSEQ_FRAME = 0x00
-            first_frame_payload_start = 8
-            bam_id_hex = "0x1CECFF00"
+        return df_phys
 
-        if tp_type == "nmea":
-            SINGLE_FRAME_MASK = 0xFF
-            FIRST_FRAME_MASK = 0x0F
-            CONSEQ_FRAME_MASK = 0x00
-            SINGLE_FRAME = 0xFF
-            FIRST_FRAME = 0x00
-            CONSEQ_FRAME = 0x00
-            first_frame_payload_start = 0
+    def rebaseline_data(self, df_phys):
+        """Given a df of physical values, this offsets the timestamp
+        to be equal to today, minus a given number of days.
+        """
+        if not df_phys.empty and type(self.days_offset) == int:
+            from datetime import datetime, timezone
 
-        return self.combine_tp_frames(
-            SINGLE_FRAME_MASK,
-            FIRST_FRAME_MASK,
-            CONSEQ_FRAME_MASK,
-            SINGLE_FRAME,
-            FIRST_FRAME,
-            CONSEQ_FRAME,
-            first_frame_payload_start,
-            conseq_frame_payload_start,
-            tp_type,
-            bam_id_hex,
-        )
+            delta_days = (datetime.now(timezone.utc) - df_phys.index.min()).days - self.days_offset
+            df_phys.index = df_phys.index + pd.Timedelta(delta_days, "day")
+
+        return df_phys
+
+    def filter_signals(self, df_phys):
+        """Given a df of physical values, return only signals matched by filter
+        """
+        if len(self.signals):
+            df_phys = df_phys[df_phys["Signal"].isin(self.signals)]
+
+        return df_phys
+
+    def get_raw_data(self, log_file):
+        """Extract a df of raw data and device ID from log file
+        """
+        import mdf_iter
+
+        with self.fs.open(log_file, "rb") as handle:
+            mdf_file = mdf_iter.MdfFile(handle)
+            device_id = self.get_device_id(mdf_file)
+            df_raw = mdf_file.get_data_frame()
+
+        return df_raw, device_id
+
+    def get_device_id(self, mdf_file):
+        return mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
+
+    def print_log_summary(self, device_id, log_file, df_phys):
+        """Print summary information for each log file
+        """
+        if self.verbose:
+            print(
+                "\n---------------",
+                f"\nDevice: {device_id} | Log file: {log_file.split(device_id)[-1]} [Extracted {len(df_phys)} decoded frames]\nPeriod: {df_phys.index.min()} - {df_phys.index.max()}\n",
+            )

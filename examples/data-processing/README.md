@@ -13,10 +13,10 @@ Download this folder, enter it, open your command prompt and run below:
 
 - `LOG/`: Contains raw J1939 data samples
 - `dbc_files/`: Contains demo/test DBC files for use in the examples
-- `process_data.py`: List log files between dates, DBC decode them and export/analyze the data
-- `create_custom_signal.py`: Example of creating a custom signal based on two existing signals
+- `process_data.py`: List log files between dates, DBC decode them and perform various processing
 - `decode_multiframe_data.py`: Example of how multiframe data can be handled incl. DBC decoding (Transport Protocol)
-- `utils.py`: Functions/classes used in the above scripts
+- `utils.py`: Functions/classes used in the above scripts (note: Identical to utils.py from the dashboard-writer repo)
+- `utils_tp.py`: Functions/classes used for Transport Protocol handling
 
 ---
 
@@ -25,7 +25,7 @@ The examples load data from local disk by default. If you want to load data from
 
 fs = setup_fs(s3=True, key="access_key", secret="secret_key", endpoint="endpoint")
 
-If you're using AWS S3, your endpoint would e.g. be `https://s3.us-east-2.amazonaws.com` if your region is `us-east-2`. A MinIO S3 endpoint would e.g. be `http://192.168.0.1:9000`.
+If you're using AWS S3, your endpoint would e.g. be `https://s3.us-east-2.amazonaws.com` (if your region is `us-east-2`). A MinIO S3 endpoint would e.g. be `http://192.168.0.1:9000`.
 
 ---
 

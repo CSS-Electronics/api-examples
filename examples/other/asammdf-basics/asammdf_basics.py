@@ -58,10 +58,8 @@ mdf_scaled_signals = mdf_scaled.filter(signals)
 # extract a single signal from the unscaled MDF
 mdf_scaled_signal = mdf.get_bus_signal(bus="CAN", name=signals[0], database=dbc["CAN"][0])
 
-# create pandas dataframe from the scaled MDF and perform operations
+# create pandas dataframe from the scaled MDF and e.g. add new signals
 pd = mdf_scaled.to_dataframe(time_as_date=True)
-
-# filter the dataframe based on the timestamp (UTC) and column values
 pd["ratio"] = pd.loc[:, signals[0]] / pd.loc[:, signals[1]]
 # pd_f = pd.loc["2020-01-13 13:00:35":"2020-01-13 13:59:56"]
 # pd_f = pd_f[(pd_f[signals[0]] > 640)]
