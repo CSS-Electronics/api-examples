@@ -1,0 +1,61 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_:
+
+
+BO_ 2028 Battery: 62 Vector__XXX
+ SG_ M_SID_0x220101_StateOfChargeBMS m257 : 56|8@1+ (0.5,0) [0|0] "%" Vector__XXX
+ SG_ response m98M : 15|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ service M : 7|8@0+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 1979 Temperature: 54 Vector__XXX
+ SG_ M_SID_0x220100_IndoorTemp m256 : 64|8@1+ (0.5,-40) [0|0] "degC" Vector__XXX
+ SG_ response m98 : 15|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ service M : 7|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ M_SID_0x220100_OutdoorTemp : 79|8@0+ (0.5,-40) [0|0] "" Vector__XXX
+
+
+
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","StandardCAN_FD","ExtendedCAN_FD","J1939PG";
+BA_DEF_  "ProtocolType" STRING ;
+BA_DEF_DEF_  "VFrameFormat" "";
+BA_DEF_DEF_  "ProtocolType" "";
+BA_ "ProtocolType" "";
+BA_ "VFrameFormat" BO_ 2028 0;
+
+SG_MUL_VAL_ 2028 M_SID_0x220101_StateOfChargeBMS response 257-257;
+SG_MUL_VAL_ 2028 response service 98-98;
+
