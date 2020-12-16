@@ -167,7 +167,7 @@ class ProcessData:
     def filter_signals(self, df_phys):
         """Given a df of physical values, return only signals matched by filter
         """
-        if len(self.signals):
+        if not df_phys.empty and len(self.signals):
             df_phys = df_phys[df_phys["Signal"].isin(self.signals)]
 
         return df_phys
