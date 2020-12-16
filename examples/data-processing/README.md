@@ -41,22 +41,23 @@ The basic concept works as follows:
 5. The re-constructed data can be decoded using DBC files, optionally using multiplexing as in the sample UDS DBC files 
 
 #### UDS example
-For the basics on UDS, see the [Wikipedia article](https://en.wikipedia.org/wiki/Unified_Diagnostic_Services). The UDS example for device ID `17BD1DB7` shows real UDS response data from a Hyunda Kona EV. 
+For UDS basics see the [Wikipedia article](https://en.wikipedia.org/wiki/Unified_Diagnostic_Services). The UDS example for device `17BD1DB7` shows UDS response data from a Hyunda Kona EV. 
 
 Below is a snippet of raw CAN data output before TP processing:
 
-|TimeStamp|BusChannel                   |ID    |IDE                                          |DLC|DataLength|Dir  |EDL  |BRS  |DataBytes                              |
-|---------|-----------------------------|------|---------------------------------------------|---|----------|-----|-----|-----|---------------------------------------|
-|2020-12-15 14:15:00.316550+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[16, 62, 98, 1, 1, 255, 247, 231]      |
-|2020-12-15 14:15:00.326550+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[33, 255, 100, 0, 0, 0, 0, 131]        |
-|2020-12-15 14:15:00.336600+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[34, 0, 3, 13, 244, 10, 9, 9]          |
-|2020-12-15 14:15:00.346600+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[35, 9, 9, 10, 0, 0, 10, 182]          |
-|2020-12-15 14:15:00.356550+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[36, 35, 182, 50, 0, 0, 146, 0]        |
-|2020-12-15 14:15:00.370950+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[37, 0, 1, 197, 0, 0, 4, 112]          |
-|2020-12-15 14:15:00.376600+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[38, 0, 0, 0, 155, 0, 0, 1]            |
-|2020-12-15 14:15:00.388250+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[39, 143, 0, 2, 157, 31, 9, 1]         |
-|2020-12-15 14:15:00.397200+00:00|1                            |2028  |False                                        |8  |8         |False|False|False|[40, 101, 0, 0, 0, 0, 11, 184]         |
-|2020-12-15 14:15:01.326600+00:00|1                            |1979  |False                                        |8  |8         |False|False|False|[16, 38, 98, 1, 0, 126, 80, 7]         |
+```
+TimeStamp,BusChannel,ID,IDE,DLC,DataLength,Dir,EDL,BRS,DataBytes
+2020-12-15 14:15:00.316550+00:00,1,2028,False,8,8,False,False,False,"[16, 62, 98, 1, 1, 255, 247, 231]"
+2020-12-15 14:15:00.326550+00:00,1,2028,False,8,8,False,False,False,"[33, 255, 100, 0, 0, 0, 0, 131]"
+2020-12-15 14:15:00.336600+00:00,1,2028,False,8,8,False,False,False,"[34, 0, 3, 13, 244, 10, 9, 9]"
+2020-12-15 14:15:00.346600+00:00,1,2028,False,8,8,False,False,False,"[35, 9, 9, 10, 0, 0, 10, 182]"
+2020-12-15 14:15:00.356550+00:00,1,2028,False,8,8,False,False,False,"[36, 35, 182, 50, 0, 0, 146, 0]"
+2020-12-15 14:15:00.370950+00:00,1,2028,False,8,8,False,False,False,"[37, 0, 1, 197, 0, 0, 4, 112]"
+2020-12-15 14:15:00.376600+00:00,1,2028,False,8,8,False,False,False,"[38, 0, 0, 0, 155, 0, 0, 1]"
+2020-12-15 14:15:00.388250+00:00,1,2028,False,8,8,False,False,False,"[39, 143, 0, 2, 157, 31, 9, 1]"
+2020-12-15 14:15:00.397200+00:00,1,2028,False,8,8,False,False,False,"[40, 101, 0, 0, 0, 0, 11, 184]"
+2020-12-15 14:15:01.326600+00:00,1,1979,False,8,8,False,False,False,"[16, 38, 98, 1, 0, 126, 80, 7]"
+```
 
 After the above sequence is processed via the UDS TP script, it results in the below single frame:
 
@@ -66,9 +67,15 @@ After the above sequence is processed via the UDS TP script, it results in the b
 
 Let's look at how this works in the script:
 
-First, the script filters the data to show UDS IDs, e.g. `2028` (`0x7EC`). The script then identifies the 'First Frame' of an UDS sequence based on the 1st byte value (`16`). The script then extracts payload data from the First Frame (starting from the 3rd byte) and all 'Consequtive Frames' (starting from the 2nd byte). The result is a new frame that receives the timestamp of the First Frame and the full data payload. The script 'finalizes' a frame once a new 'First Frame' is identified.
+First, the script filters the data to show only the filtered UDS response IDs, in this case `2028` (`0x7EC`). The script then iterates through the data line-by-line until it encounters the 'First Frame' of an UDS sequence (identified based on the 1st byte value, `16`). Next, the script extracts bytes 2-7 from the First Frame and concatenates these with bytes 1-7 of the 'Consequtive Frames'. The script 'finalizes' the constructed frame once a new 'First Frame' is encountered.
 
-Note that the 1st data byte of this new frame is the UDS Response Service ID (SID), while the 2nd to 3rd bytes reflect the UDS Data Identifier (DID). A UDS DBC file can thus use extended multiplexing to decode signals, utilizing the SID and DID as sequential multiplexors to distinguish between different UDS service modes and DIDs. See the UDS DBC file examples for a starting point on how this can be constructed.
+The first 3 bytes of this new frame should be interpreted as follows:
+- Byte 0: This is the UDS Response Service ID (SID)
+- Bytes 1-2: This is the UDS Data Identifier (DID)
+
+Often you'll see references to UDS extended PIDs, e.g. `0x220101`. Here, `0x22` is the request service (with `0x62` being the corresponding response service). The `0x0101` is the DID. 
+
+A UDS DBC file can use extended multiplexing to decode UDS signals, utilizing the SID and DID as sequential multiplexors to distinguish between different UDS service modes and DIDs. See the UDS DBC file examples for a starting point on how this can be constructed.
 
 The script merges the reconstructed UDS frames into the original data (removing the original entries of the response ID). The result is a new raw dataframe that can be processed as you would normally do (using a suitable DBC file). The above example has an associated DBC file, `tp_uds_hyundai_soc.dbc`, which lets you extract e.g. State of Charge.
 
