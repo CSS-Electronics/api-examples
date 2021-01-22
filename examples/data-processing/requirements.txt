@@ -1,6 +1,7 @@
 attrs==19.3.0
 bitstruct==8.11.0
 botocore==1.17.43
+boto3==1.16.58
 can-decoder>=0.0.4
 canedge-browser>=0.0.5
 canmatrix==0.9.1
