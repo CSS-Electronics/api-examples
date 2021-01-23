@@ -5,16 +5,20 @@ import mdf_iter
 import canedge_browser
 from pathlib import Path
 import boto3
+from botocore.client import Config
+from s3transfer import TransferConfig, S3Transfer
+
 
 # specify devices to process from local disk
 devices = ["LOG/958D2219"]
-session_offset = 0  # optionally manually offset the session counter for the uploaded files
+session_offset = 0  # optionally offset the session counter for the uploaded files
 
 # specify target S3 bucket details
 key = "s3_key"
 secret = "s3_secret"
 endpoint = "s3_endpoint"  # e.g. https://s3.eu-central-1.amazonaws.com
 bucket = "s3_bucket"
+
 
 # ----------------------------------
 # load all log files from local folder
@@ -23,8 +27,11 @@ fs = canedge_browser.LocalFileSystem(base_path=base_path)
 log_files = canedge_browser.get_log_files(fs, devices)
 print(f"Found a total of {len(log_files)} log files")
 
-s3 = boto3.resource("s3", endpoint_url=endpoint, aws_access_key_id=key, aws_secret_access_key=secret,)
-bucket = s3.Bucket(bucket)
+s3 = boto3.client(
+    "s3", endpoint_url=endpoint, aws_access_key_id=key, aws_secret_access_key=secret, config=Config(signature_version="s3v4"),
+)
+
+transfer = S3Transfer(s3, TransferConfig(multipart_threshold=9999999999999999, max_concurrency=10, num_download_attempts=10,))
 
 # for each log file, extract header information, create S3 key and upload
 for log_file in log_files:
@@ -47,5 +54,5 @@ for log_file in log_files:
     s3_meta = {"Metadata": {"Fw": s3_meta_fw, "Timestamp": s3_meta_timestamp}}
 
     # upload local file to S3
-    bucket.upload_file(log_file[1:], Key=s3_key, ExtraArgs=s3_meta)
+    transfer.upload_file(log_file[1:], key=s3_key, bucket=bucket, extra_args=s3_meta)
     print(f"Uploaded {log_file} as {s3_key}")
