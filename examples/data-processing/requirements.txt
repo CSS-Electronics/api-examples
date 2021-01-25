@@ -1,8 +1,7 @@
 attrs==19.3.0
 bitstruct==8.11.0
 botocore==1.17.43
-boto3==1.16.58
-can-decoder>=0.0.4
+can-decoder>=0.0.5
 canedge-browser>=0.0.5
 canmatrix==0.9.1
 click==7.1.2
@@ -10,7 +9,7 @@ docutils==0.15.2
 fsspec==0.8.0
 future==0.18.2
 jmespath==0.10.0
-mdf-iter
+mdf-iter>=0.0.3
 numpy==1.19.1
 pandas==1.1.0
 pathlib2==2.3.5

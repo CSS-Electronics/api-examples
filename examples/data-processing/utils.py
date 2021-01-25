@@ -180,7 +180,10 @@ class ProcessData:
         with self.fs.open(log_file, "rb") as handle:
             mdf_file = mdf_iter.MdfFile(handle)
             device_id = self.get_device_id(mdf_file)
-            df_raw = mdf_file.get_data_frame()
+            df_raw_lin = mdf_file.get_data_frame_lin()
+            df_raw_lin["IDE"] = 0
+            df_raw_can = mdf_file.get_data_frame()
+            df_raw = df_raw_can.append(df_raw_lin)
 
         return df_raw, device_id
 
