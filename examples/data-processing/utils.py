@@ -57,7 +57,12 @@ def list_log_files(fs, devices, start_times, verbose=True):
             if len(log_files_device) > 0:
                 with fs.open(log_files_device[0], "rb") as handle:
                     mdf_file = mdf_iter.MdfFile(handle)
-                    df_raw = mdf_file.get_data_frame()
+
+                    df_raw_lin = mdf_file.get_data_frame_lin()
+                    df_raw_lin["IDE"] = 0
+                    df_raw_can = mdf_file.get_data_frame()
+                    df_raw = df_raw_can.append(df_raw_lin)
+
                     end_time = df_raw.index[-1]
 
                 if end_time < start:
