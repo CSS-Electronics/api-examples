@@ -89,8 +89,6 @@ def restructure_data(df_phys, res):
                 fill_method="none",
             ).set_index("TimeStamp")
 
-        df_phys_join.to_csv("output_joined.csv")
-
     return df_phys_join
 
 
