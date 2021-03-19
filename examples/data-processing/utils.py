@@ -84,7 +84,7 @@ def restructure_data(df_phys, res):
         for signal, data in df_phys.groupby("Signal"):
             df_phys_join = pd.merge_ordered(
                 df_phys_join,
-                data["Physical Value"].rename(signal).resample("1S").pad().dropna(),
+                data["Physical Value"].rename(signal).resample(res).pad().dropna(),
                 on="TimeStamp",
                 fill_method="none",
             ).set_index("TimeStamp")
