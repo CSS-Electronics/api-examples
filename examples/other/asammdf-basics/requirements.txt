@@ -15,7 +15,7 @@ numexpr==2.7.1
 numpy==1.19.1
 pandas==1.1.0
 pathlib2==2.3.5
-Pillow==7.2.0
+Pillow==8.1.1
 pyparsing==2.4.7
 python-dateutil==2.8.1
 pytz==2020.1
