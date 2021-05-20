@@ -111,7 +111,7 @@ class MultiFrameDecoder:
                             pgn = int(pgn_hex, 16)
                             can_id = (6 << 26) | (pgn << 8) | 254
 
-                        if tp_type == "uds":
+                        if tp_type == "uds" or tp_type == "nmea":
                             ff_length = (payload[0] & 0x0F) << 8 | payload[1]
 
                         for byte in payload[first_frame_payload_start:]:
@@ -181,7 +181,7 @@ class MultiFrameDecoder:
             SINGLE_FRAME = 0xFF
             FIRST_FRAME = 0x00
             CONSEQ_FRAME = 0x00
-            first_frame_payload_start = 0
+            first_frame_payload_start = 2
 
         return self.combine_tp_frames(
             SINGLE_FRAME_MASK,

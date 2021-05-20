@@ -37,26 +37,26 @@ def process_tp_example(devices, dbc_path, res_id_list_hex, tp_type):
 # ----------------------------------------
 # run different TP examples
 
-# basic UDS example with multiple UDS PIDs on same CAN ID, e.g. 221100, 221101
-devices = ["LOG_TP/0D2C6546"]
-dbc_paths = [r"dbc_files/tp_uds_test.dbc"]
-res_id_list_hex = ["0x7E9"]
-
-process_tp_example(devices, dbc_paths, res_id_list_hex, "uds")
-
-# UDS data from Hyundai Kona EV (SoC%)
+# # basic UDS example with multiple UDS PIDs on same CAN ID, e.g. 221100, 221101
+# devices = ["LOG_TP/0D2C6546"]
+# dbc_paths = [r"dbc_files/tp_uds_test.dbc"]
+# res_id_list_hex = ["0x7E9"]
+#
+# process_tp_example(devices, dbc_paths, res_id_list_hex, "uds")
+#
+# # UDS data from Hyundai Kona EV (SoC%)
 devices = ["LOG_TP/17BD1DB7"]
 dbc_paths = [r"dbc_files/tp_uds_hyundai_soc.dbc"]
 res_id_list_hex = ["0x7EC", "0x7BB"]
 
 process_tp_example(devices, dbc_paths, res_id_list_hex, "uds")
 
-# J1939 TP data
-devices = ["LOG_TP/FCBF0606"]
-res_id_list_hex = ["0x1CEBFF00"]
-dbc_paths = [r"dbc_files/tp_j1939.dbc"]
-
-process_tp_example(devices, dbc_paths, res_id_list_hex, "j1939")
+# # J1939 TP data
+# devices = ["LOG_TP/FCBF0606"]
+# res_id_list_hex = ["0x1CEBFF00"]
+# dbc_paths = [r"dbc_files/tp_j1939.dbc"]
+#
+# process_tp_example(devices, dbc_paths, res_id_list_hex, "j1939")
 
 # UDS data across two CAN channels
 # devices = ["LOG_TP/FE34E37D"]
@@ -65,9 +65,9 @@ process_tp_example(devices, dbc_paths, res_id_list_hex, "j1939")
 #
 # process_tp_example(devices, dbc_paths, res_id_list_hex, "uds")
 
-# NMEA 2000 TP data
-# devices = ["LOG_TP/64AB4329"]
-# res_id_list_hex = ["0x1DEFFF00"]
-# dbc_paths = [r"dbc_files/tp_nmea.dbc"]
+# NMEA 2000 TP data (with GNSS position)
+# devices = ["LOG_TP/94C49784"]
+# res_id_list_hex = ["0xDF80523"]
+# dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
 #
 # process_tp_example(devices, dbc_paths, res_id_list_hex, "nmea")
