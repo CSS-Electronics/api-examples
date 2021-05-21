@@ -76,18 +76,24 @@ def list_log_files(fs, devices, start_times, verbose=True):
     return log_files
 
 
-def restructure_data(df_phys, res):
+def restructure_data(df_phys, res, full_col_names):
     import pandas as pd
 
     df_phys_join = pd.DataFrame({"TimeStamp": []})
     if not df_phys.empty:
-        for signal, data in df_phys.groupby("Signal"):
-            df_phys_join = pd.merge_ordered(
-                df_phys_join,
-                data["Physical Value"].rename(signal).resample(res).pad().dropna(),
-                on="TimeStamp",
-                fill_method="none",
-            ).set_index("TimeStamp")
+        for message, df_phys_message in df_phys.groupby("CAN ID"):
+            for signal, data in df_phys_message.groupby("Signal"):
+                if full_col_names == True:
+                    col_name = str(hex(message)).upper()[2:] + "." + signal
+                else:
+                    col_name = signal
+
+                df_phys_join = pd.merge_ordered(
+                    df_phys_join,
+                    data["Physical Value"].rename(col_name).resample(res).pad().dropna(),
+                    on="TimeStamp",
+                    fill_method="none",
+                ).set_index("TimeStamp")
 
     return df_phys_join
 
