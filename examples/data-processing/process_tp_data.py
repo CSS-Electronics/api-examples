@@ -2,7 +2,7 @@ import mdf_iter, canedge_browser, can_decoder, os
 import pandas as pd
 from datetime import datetime, timezone
 from utils import setup_fs, load_dbc_files, ProcessData
-from utils_tp import MultiFrameDecoder
+from utils_tp import MultiFrameDecoder, nmea_fast_packet_pgns
 
 # ---------------------------------------------------
 # initialize DBC converter and file loader
@@ -67,7 +67,7 @@ process_tp_example(devices, dbc_paths, res_id_list_hex, "uds")
 
 # NMEA 2000 TP data (with GNSS position)
 # devices = ["LOG_TP/94C49784"]
-# res_id_list_hex = ["0xDF80523"]
+# res_id_list_hex = nmea_fast_packet_pgns
 # dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
 #
 # process_tp_example(devices, dbc_paths, res_id_list_hex, "nmea")
