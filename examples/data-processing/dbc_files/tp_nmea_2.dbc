@@ -1,0 +1,77 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_:
+
+
+BO_ 2583168510 gnssPositionData: 51 Vector__XXX
+ SG_ sid : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ date : 8|16@1+ (1,0) [0|0] "days" Vector__XXX
+ SG_ time : 24|32@1+ (0.0001,0) [0|0] "s" Vector__XXX
+ SG_ latitude : 56|64@1- (1e-16,0) [0|0] "deg" Vector__XXX
+ SG_ longitude : 120|64@1- (1e-16,0) [0|0] "deg" Vector__XXX
+ SG_ altitude : 184|64@1- (1e-06,0) [0|0] "m" Vector__XXX
+ SG_ gnssType : 248|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ method : 252|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ integrity : 256|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ reserved : 258|6@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ numberOfSvs : 264|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ hdop : 272|16@1- (0.01,0) [0|0] "" Vector__XXX
+ SG_ pdop : 288|16@1- (0.01,0) [0|0] "" Vector__XXX
+ SG_ geoidalSeparation : 304|32@1- (0.01,0) [0|0] "m" Vector__XXX
+ SG_ referenceStations : 336|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ referenceStationType : 344|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ referenceStationId : 348|12@1+ (1,0) [0|0] "None" Vector__XXX
+ SG_ ageOfDgnssCorrections : 360|16@1+ (0.01,0) [0|0] "s" Vector__XXX
+
+
+
+CM_ BO_ 2583168510 "GNSS Position Data";
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG";
+BA_DEF_  "DatabaseVersion" STRING ;
+BA_DEF_  "BusType" STRING ;
+BA_DEF_  "ProtocolType" STRING ;
+BA_DEF_  "DatabaseCompiler" STRING ;
+BA_DEF_DEF_  "VFrameFormat" "J1939PG";
+BA_DEF_DEF_  "DatabaseVersion" "1.2";
+BA_DEF_DEF_  "BusType" "";
+BA_DEF_DEF_  "ProtocolType" "J1939";
+BA_DEF_DEF_  "DatabaseCompiler" "";
+BA_ "VFrameFormat" BO_ 2583168510 3;
+VAL_ 2583168510 gnssType 8 "Galileo" 7 "surveyed" 6 "integrated" 5 "Chayka" 4 "GPS+SBAS/WAAS+GLONASS" 3 "GPS+SBAS/WAAS" 2 "GPS+GLONASS" 1 "GLONASS" 0 "GPS" ;
+VAL_ 2583168510 method 8 "Simulate mode" 7 "Manual Input" 6 "Estimated (DR) mode" 5 "RTK float" 4 "RTK Fixed Integer" 3 "Precise GNSS" 2 "DGNSS fix" 1 "GNSS fix" 0 "no GNSS" ;
+VAL_ 2583168510 integrity 2 "Caution" 1 "Safe" 0 "No integrity checking" ;
+VAL_ 2583168510 referenceStationType 8 "Galileo" 7 "surveyed" 6 "integrated" 5 "Chayka" 4 "GPS+SBAS/WAAS+GLONASS" 3 "GPS+SBAS/WAAS" 2 "GPS+GLONASS" 1 "GLONASS" 0 "GPS" ;
+

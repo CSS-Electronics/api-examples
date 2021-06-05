@@ -24,6 +24,17 @@ class MultiFrameDecoder:
 
         return
 
+    def calculate_pgn(self, frame_id):
+        pgn = (frame_id & 0x03FFFF00) >> 8
+
+        pgn_f = (pgn & 0xFF00) >> 8
+        pgn_s = pgn & 0x00FF
+
+        if pgn_f < 240:
+            pgn &= 0xFFFFFF00
+
+        return pgn
+
     def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
         new_frame = base_frame
         new_frame.at["DataBytes"] = payload_concatenated
@@ -53,7 +64,12 @@ class MultiFrameDecoder:
 
         df_raw_combined = pd.DataFrame()
 
-        df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
+        if tp_type == "nmea":
+            # use PGN matching
+            df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].apply(self.calculate_pgn).isin(self.res_id_list)]
+        else:
+            df_raw_excl_tp = self.df_raw[~self.df_raw["ID"].isin(self.res_id_list)]
+
         df_raw_combined = df_raw_excl_tp
 
         for channel, df_raw_channel in self.df_raw.groupby("BusChannel"):
@@ -64,7 +80,10 @@ class MultiFrameDecoder:
                 else:
                     bam_id = int(bam_id_hex, 16)
 
-                df_raw_filter = df_raw_channel[df_raw_channel["ID"].isin([res_id, bam_id])]
+                if tp_type == "nmea":
+                    df_raw_filter = df_raw_channel[df_raw_channel["ID"].apply(self.calculate_pgn).isin([res_id, bam_id])]
+                else:
+                    df_raw_filter = df_raw_channel[df_raw_channel["ID"].isin([res_id, bam_id])]
 
                 if df_raw_filter.empty:
                     continue
@@ -154,6 +173,7 @@ class MultiFrameDecoder:
     def combine_tp_frames_by_type(self, tp_type):
         conseq_frame_payload_start = 1
         bam_id_hex = ""
+        nmea_pgn_id_hex = []
 
         if tp_type == "uds":
             SINGLE_FRAME_MASK = 0xF0
@@ -195,3 +215,45 @@ class MultiFrameDecoder:
             tp_type,
             bam_id_hex,
         )
+
+
+nmea_fast_packet_pgns = [
+    "0xfed8",
+    "0x1f007",
+    "0x1f008",
+    "0x1f009",
+    "0x1f014",
+    "0x1f016",
+    "0x1f101",
+    "0x1f105",
+    "0x1f201",
+    "0x1f208",
+    "0x1f209",
+    "0x1f20a",
+    "0x1f20c",
+    "0x1f20f",
+    "0x1f210",
+    "0x1f212",
+    "0x1f513",
+    "0x1f805",
+    "0x1f80e",
+    "0x1f80f",
+    "0x1f810",
+    "0x1f811",
+    "0x1f814",
+    "0x1f815",
+    "0x1f904",
+    "0x1f905",
+    "0x1fa04",
+    "0x1fb02",
+    "0x1fb03",
+    "0x1fb04",
+    "0x1fb05",
+    "0x1fb11",
+    "0x1fb12",
+    "0x1fd10",
+    "0x1fe07",
+    "0x1fe12",
+    "0x1ff14",
+    "0x1ff15",
+]
