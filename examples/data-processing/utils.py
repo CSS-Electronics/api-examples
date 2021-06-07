@@ -76,7 +76,7 @@ def list_log_files(fs, devices, start_times, verbose=True):
     return log_files
 
 
-def restructure_data(df_phys, res, full_col_names):
+def restructure_data(df_phys, res, full_col_names=True):
     import pandas as pd
 
     df_phys_join = pd.DataFrame({"TimeStamp": []})
@@ -84,7 +84,7 @@ def restructure_data(df_phys, res, full_col_names):
         for message, df_phys_message in df_phys.groupby("CAN ID"):
             for signal, data in df_phys_message.groupby("Signal"):
                 if full_col_names == True:
-                    col_name = str(hex(message)).upper()[2:] + "." + signal
+                    col_name = str(hex(int(message))).upper()[2:] + "." + str(signal)
                 else:
                     col_name = signal
 
@@ -167,6 +167,7 @@ class ProcessData:
         """
         if not df_phys.empty and type(self.days_offset) == int:
             from datetime import datetime, timezone
+            import pandas as pd
 
             delta_days = (datetime.now(timezone.utc) - df_phys.index.min()).days - self.days_offset
             df_phys.index = df_phys.index + pd.Timedelta(delta_days, "day")

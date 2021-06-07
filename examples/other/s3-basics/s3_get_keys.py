@@ -8,12 +8,7 @@ from datetime import datetime
 
 
 def get_keys(
-    s3,
-    bucket_name,
-    prefix="",
-    suffix="",
-    date_start=datetime(1900, 1, 1, 0, 0, 0),
-    date_end=datetime(2100, 1, 1, 0, 0, 0),
+    s3, bucket_name, prefix="", suffix="", date_start=datetime(1900, 1, 1, 0, 0, 0), date_end=datetime(2100, 1, 1, 0, 0, 0),
 ):
     kwargs = {"Bucket": bucket_name, "Prefix": prefix}
     while True:
@@ -22,24 +17,15 @@ def get_keys(
             key = obj["Key"]
             meta = s3.meta.client.head_object(Bucket=bucket_name, Key=key)
             date_time = datetime(1900, 1, 1, 0, 0, 0)
-            if (
-                key.endswith(suffix)
-                and datetime(1900, 1, 1, 0, 0, 0) < date_start
-                and date_end < datetime(2100, 1, 1, 0, 0, 0)
-            ):
+            if key.endswith(suffix) and datetime(1900, 1, 1, 0, 0, 0) < date_start and date_end < datetime(2100, 1, 1, 0, 0, 0):
                 try:
                     date_time = datetime.strptime(
-                        meta["ResponseMetadata"]["HTTPHeaders"]["x-amz-meta-timestamp"],
-                        "%Y%m%dT%H%M%SZ",
+                        str(meta["ResponseMetadata"]["HTTPHeaders"]["x-amz-meta-timestamp"]), "%Y%m%dT%H%M%S",
                     )
                 except:
                     print("Object " + key + " was excluded (no valid meta timestamp)")
                     date_time = datetime(1800, 1, 1, 0, 0, 0)
-            if (
-                key.endswith(suffix)
-                and date_start <= date_time
-                and date_time <= date_end
-            ):
+            if key.endswith(suffix) and date_start <= date_time and date_time <= date_end:
                 yield key
         try:
             kwargs["ContinuationToken"] = resp["NextContinuationToken"]
