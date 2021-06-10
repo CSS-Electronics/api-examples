@@ -43,9 +43,9 @@ dbc_paths = [r"dbc_files/tp_j1939.dbc"]
 process_tp_example(devices, dbc_paths, "j1939")
 
 # NMEA 2000 fast packet data (with GNSS position)
-devices = ["LOG_TP/94C49784"]
-dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
-process_tp_example(devices, dbc_paths, "nmea")
+# devices = ["LOG_TP/94C49784"]
+# dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
+# process_tp_example(devices, dbc_paths, "nmea")
 
 # UDS data across two CAN channels
 devices = ["LOG_TP/FE34E37D"]
