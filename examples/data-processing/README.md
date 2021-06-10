@@ -16,7 +16,6 @@ Download this folder, enter it, open your command prompt and run below:
 - `process_data.py`: List log files between dates, DBC decode them and perform various processing
 - `process_tp_data.py`: Example of how multiframe data can be handled incl. DBC decoding (Transport Protocol)
 - `utils.py`: Functions/classes used in the above scripts (note: Identical to utils.py from the dashboard-writer repo)
-- `utils_tp.py`: Functions/classes used for Transport Protocol handling
 
 ---
 
@@ -30,15 +29,31 @@ If you're using AWS S3, your endpoint would e.g. be `https://s3.us-east-2.amazon
 ---
 
 ### Regarding Transport Protocol example
-The example in `process_tp_data.py` should be seen as a very simplistic WIP TP implementation. It can be used as a starting point and will most likely need to be modified for individual use cases. We of course welcome any questions/feedback on this functionality.
+The example in `process_tp_data.py` should be seen as a very simplistic TP implementation. It can be used as a starting point and will most likely need to be modified for individual use cases. We of course welcome any questions/feedback on this functionality.
 
 The basic concept works as follows:
 
-1. You specify a list of 'response IDs', which are the CAN IDs with multiframe responses  
-2. The raw data is filtered by the response IDs and the payloads of these frames are combined  
+1. You specify the "type" of transport protocol: UDS (`uds`), J1939 (`j1939`) or NMEA 2000 Fast Packets (`nmea`)
+2. The raw data is filtered by the protocol-specific 'TP response IDs' and the payloads of these frames are combined  
 3. The original response frames are then replaced by these re-constructed frames with payloads >8 bytes  
-4. You can modify how the first/consequtive frames are interpreted (see the UDS and J1939 examples)  
-5. The re-constructed data can be decoded using DBC files, optionally using multiplexing as in the sample UDS DBC files 
+4. The re-constructed data can be decoded using DBC files, optionally using multiplexing as in the sample UDS DBC files 
+
+#### Implementing TP processing in other scripts 
+To use the Transport Protocol functionality in other scripts, you need to make minor modifications:
+
+1. Ensure that you import the `MultiFrameDecoder` class from `utils.py` 
+2. Specify the type via the `tp_type` variable and ensure you include this in the `extract_phys` function 
+
+See below example:
+
+```
+tp_type = "j1939"
+df_raw, device_id = proc.get_raw_data(log_file)
+tp = MultiFrameDecoder(tp_type)
+df_raw = tp.combine_tp_frames(df_raw)
+df_phys = proc.extract_phys(df_raw, tp_type=tp_type)
+```
+
 
 #### UDS example
 For UDS basics see the [Wikipedia article](https://en.wikipedia.org/wiki/Unified_Diagnostic_Services). The UDS example for device `17BD1DB7` shows UDS response data from a Hyunda Kona EV. 
@@ -79,6 +94,3 @@ A UDS DBC file can use extended multiplexing to decode UDS signals, utilizing th
 
 The script merges the reconstructed UDS frames into the original data (removing the original entries of the response ID). The result is a new raw dataframe that can be processed as you would normally do (using a suitable DBC file). The above example has an associated DBC file, `tp_uds_hyundai_soc.dbc`, which lets you extract e.g. State of Charge.
 
------
-### Pending improvements
-- Improve the UDS/J1939 scripts to alternatively trigger the creation of a new combined frame once the payload exceeds the data length 

@@ -208,3 +208,240 @@ class ProcessData:
                 "\n---------------",
                 f"\nDevice: {device_id} | Log file: {log_file.split(device_id)[-1]} [Extracted {len(df_phys)} decoded frames]\nPeriod: {df_phys.index.min()} - {df_phys.index.max()}\n",
             )
+
+
+# -----------------------------------------------
+class MultiFrameDecoder:
+    """BETA class for handling transport protocol data. For each response ID, identify
+    sequences of subsequent frames and combine the relevant parts of the data payloads
+    into a single payload with the response ID as the ID. The original raw dataframe is
+    then cleansed of the original response ID sequence frames. Instead, the new concatenated
+    frames are inserted. Further, the class supports DBC decoding of the resulting modified raw data
+
+    :param tp_type:                     the class supports UDS ("uds"), NMEA 2000 Fast Packets ("nmea") and J1939 ("j1939")
+    :param df_raw:                      dataframe of raw CAN data from the mdf_iter module
+
+    SINGLE_FRAME_MASK:                  mask used in matching single frames
+    FIRST_FRAME_MASK:                   mask used in matching first frames
+    CONSEQ_FRAME_MASK:                  mask used in matching consequtive frames
+    SINGLE_FRAME:                       frame type reflecting a single frame response
+    FIRST_FRAME:                        frame type reflecting the first frame in a multi frame response
+    CONSEQ_FRAME:                       frame type reflecting a consequtive frame in a multi frame response
+    ff_payload_start:                   the combined payload will start at this byte in the FIRST_FRAME
+    bam_pgn_hex:                        this is used in J1939 and marks the initial BAM message ID in HEX
+    res_id_list_hex:                    TP 'response CAN IDs' to process. For nmea/j1939, these are provided by default
+
+    """
+
+    def __init__(self, tp_type=""):
+        frame_struct_uds = {
+            "SINGLE_FRAME_MASK": 0xF0,
+            "FIRST_FRAME_MASK": 0xF0,
+            "CONSEQ_FRAME_MASK": 0xF0,
+            "SINGLE_FRAME": 0x00,
+            "FIRST_FRAME": 0x10,
+            "CONSEQ_FRAME": 0x20,
+            "ff_payload_start": 2,
+            "bam_pgn_hex": "",
+            "res_id_list_hex": ["0x7E0", "0x7E9", "0x7EA", "0x7EB", "0x7EC", "0x7ED", "0x7EE", "0x7EF", "0x7EA", "0x7BB"],
+        }
+
+        frame_struct_j1939 = {
+            "SINGLE_FRAME_MASK": 0xFF,
+            "FIRST_FRAME_MASK": 0xFF,
+            "CONSEQ_FRAME_MASK": 0x00,
+            "SINGLE_FRAME": 0xFF,
+            "FIRST_FRAME": 0x20,
+            "CONSEQ_FRAME": 0x00,
+            "ff_payload_start": 8,
+            "bam_pgn_hex": "0xEC00",
+            "res_id_list_hex": ["0xEB00"],
+        }
+
+        frame_struct_nmea = {
+            "SINGLE_FRAME_MASK": 0xFF,
+            "FIRST_FRAME_MASK": 0x0F,
+            "CONSEQ_FRAME_MASK": 0x00,
+            "SINGLE_FRAME": 0xFF,
+            "FIRST_FRAME": 0x00,
+            "CONSEQ_FRAME": 0x00,
+            "ff_payload_start": 2,
+            "bam_pgn_hex": "",
+            "res_id_list_hex": [
+                "0xfed8",
+                "0x1f007",
+                "0x1f008",
+                "0x1f009",
+                "0x1f014",
+                "0x1f016",
+                "0x1f101",
+                "0x1f105",
+                "0x1f201",
+                "0x1f208",
+                "0x1f209",
+                "0x1f20a",
+                "0x1f20c",
+                "0x1f20f",
+                "0x1f210",
+                "0x1f212",
+                "0x1f513",
+                "0x1f805",
+                "0x1f80e",
+                "0x1f80f",
+                "0x1f810",
+                "0x1f811",
+                "0x1f814",
+                "0x1f815",
+                "0x1f904",
+                "0x1f905",
+                "0x1fa04",
+                "0x1fb02",
+                "0x1fb03",
+                "0x1fb04",
+                "0x1fb05",
+                "0x1fb11",
+                "0x1fb12",
+                "0x1fd10",
+                "0x1fe07",
+                "0x1fe12",
+                "0x1ff14",
+                "0x1ff15",
+            ],
+        }
+
+        if tp_type == "uds":
+            self.frame_struct = frame_struct_uds
+        elif tp_type == "j1939":
+            self.frame_struct = frame_struct_j1939
+        elif tp_type == "nmea":
+            self.frame_struct = frame_struct_nmea
+        else:
+            self.frame_struct = {}
+
+        self.tp_type = tp_type
+
+        return
+
+    def calculate_pgn(self, frame_id):
+        pgn = (frame_id & 0x03FFFF00) >> 8
+
+        pgn_f = (pgn & 0xFF00) >> 8
+        pgn_s = pgn & 0x00FF
+
+        if pgn_f < 240:
+            pgn &= 0xFFFFFF00
+
+        return pgn
+
+    def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
+        new_frame = base_frame
+        new_frame.at["DataBytes"] = payload_concatenated
+        new_frame.at["DLC"] = 0
+        new_frame.at["DataLength"] = len(payload_concatenated)
+
+        if can_id:
+            new_frame.at["ID"] = can_id
+
+        return new_frame
+
+    def combine_tp_frames(self, df_raw):
+        import pandas as pd
+        import sys
+
+        bam_pgn_hex = self.frame_struct["bam_pgn_hex"]
+        res_id_list = [int(res_id, 16) for res_id in self.frame_struct["res_id_list_hex"]]
+
+        df_raw_combined = pd.DataFrame()
+
+        # use PGN matching for J1939 and NMEA
+        if self.tp_type == "nmea" or self.tp_type == "j1939":
+            df_raw_excl_tp = df_raw[~df_raw["ID"].apply(self.calculate_pgn).isin(res_id_list)]
+        else:
+            df_raw_excl_tp = df_raw[~df_raw["ID"].isin(res_id_list)]
+
+        df_raw_combined = df_raw_excl_tp
+
+        for channel, df_raw_channel in df_raw.groupby("BusChannel"):
+            for res_id in res_id_list:
+                # filter raw data for response ID and extract a 'base frame'
+                if bam_pgn_hex == "":
+                    bam_pgn = 0
+                else:
+                    bam_pgn = int(bam_pgn_hex, 16)
+
+                if self.tp_type == "nmea" or self.tp_type == "j1939":
+                    df_raw_filter = df_raw_channel[df_raw_channel["ID"].apply(self.calculate_pgn).isin([res_id, bam_pgn])]
+                else:
+                    df_raw_filter = df_raw_channel[df_raw_channel["ID"].isin([res_id])]
+
+                if df_raw_filter.empty:
+                    continue
+
+                base_frame = df_raw_filter.iloc[0]
+
+                frame_list = []
+                frame_timestamp_list = []
+                payload_concatenated = []
+                ff_length = 0xFFF
+                can_id = None
+                conseq_frame_prev = None
+
+                # iterate through rows in filtered dataframe
+                for index, row in df_raw_filter.iterrows():
+                    payload = row["DataBytes"]
+                    first_byte = payload[0]
+                    row_id = row["ID"]
+                    row_pgn = self.calculate_pgn(row_id)
+
+                    # check if first frame (either for UDS/NMEA or J1939 case)
+                    first_frame_test = (
+                        (first_byte & self.frame_struct["FIRST_FRAME_MASK"] == self.frame_struct["FIRST_FRAME"])
+                        & (bam_pgn_hex == "")
+                    ) or (self.tp_type == "j1939" and bam_pgn == row_pgn)
+
+                    # if single frame, save frame directly (excl. 1st byte)
+                    if first_byte & self.frame_struct["SINGLE_FRAME_MASK"] == self.frame_struct["SINGLE_FRAME"]:
+                        new_frame = self.construct_new_tp_frame(base_frame, payload, row_id)
+                        frame_list.append(new_frame.values.tolist())
+                        frame_timestamp_list.append(index)
+
+                    # if first frame, save info from prior multi frame response sequence,
+                    # then initialize a new sequence incl. the first frame payload
+                    elif first_frame_test:
+                        # create a new frame using information from previous iterations
+                        if len(payload_concatenated) >= ff_length:
+                            new_frame = self.construct_new_tp_frame(base_frame, payload_concatenated, can_id)
+
+                            frame_list.append(new_frame.values.tolist())
+                            frame_timestamp_list.append(frame_timestamp)
+
+                        # reset and start on next frame
+                        payload_concatenated = []
+                        conseq_frame_prev = None
+                        frame_timestamp = index
+
+                        # for J1939, extract PGN and convert to 29 bit CAN ID for use in baseframe
+                        if self.tp_type == "j1939":
+                            pgn_hex = "".join("{:02x}".format(x) for x in reversed(payload[5:8]))
+                            pgn = int(pgn_hex, 16)
+                            can_id = (6 << 26) | (pgn << 8) | 254
+
+                        ff_length = (payload[0] & 0x0F) << 8 | payload[1]
+
+                        for byte in payload[self.frame_struct["ff_payload_start"] :]:
+                            payload_concatenated.append(byte)
+
+                    # if consequtive frame, extend payload with payload excl. 1st byte
+                    elif first_byte & self.frame_struct["CONSEQ_FRAME_MASK"] == self.frame_struct["CONSEQ_FRAME"]:
+                        if (conseq_frame_prev == None) or ((first_byte - conseq_frame_prev) == 1):
+                            conseq_frame_prev = first_byte
+                            for byte in payload[1:]:
+                                payload_concatenated.append(byte)
+
+                df_raw_tp = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
+                df_raw_combined = df_raw_combined.append(df_raw_tp)
+
+        df_raw_combined.index.name = "TimeStamp"
+        df_raw_combined = df_raw_combined.sort_index()
+
+        return df_raw_combined
