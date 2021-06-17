@@ -44,7 +44,6 @@ To use the Transport Protocol functionality in other scripts, you need to make m
 1. Ensure that you import the `MultiFrameDecoder` class from `utils.py` 
 2. Specify the type via the `tp_type` variable e.g. to `j1939` 
 3. After you've extract the normal raw dataframe, parse it to the `tp.combine_tp_frames` function as below
-4. Ensure you include `tp_type` in the `extract_phys` function
 
 See below example:
 
@@ -53,7 +52,6 @@ tp_type = "j1939"
 df_raw, device_id = proc.get_raw_data(log_file)
 tp = MultiFrameDecoder(tp_type)
 df_raw = tp.combine_tp_frames(df_raw)
-df_phys = proc.extract_phys(df_raw, tp_type=tp_type)
 ```
 
 

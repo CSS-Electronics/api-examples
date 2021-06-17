@@ -57,12 +57,10 @@ def list_log_files(fs, devices, start_times, verbose=True):
             if len(log_files_device) > 0:
                 with fs.open(log_files_device[0], "rb") as handle:
                     mdf_file = mdf_iter.MdfFile(handle)
-
                     df_raw_lin = mdf_file.get_data_frame_lin()
                     df_raw_lin["IDE"] = 0
                     df_raw_can = mdf_file.get_data_frame()
                     df_raw = df_raw_can.append(df_raw_lin)
-
                     end_time = df_raw.index[-1]
 
                 if end_time < start:
@@ -129,7 +127,7 @@ class ProcessData:
         self.verbose = verbose
         return
 
-    def extract_phys(self, df_raw, tp_type=None):
+    def extract_phys(self, df_raw):
         """Given df of raw data and list of decoding databases, create new def with
         physical values (no duplicate signals and optionally filtered/rebaselined)
         """
@@ -140,15 +138,12 @@ class ProcessData:
         for db in self.db_list:
             df_decoder = can_decoder.DataFrameDecoder(db)
 
-            if tp_type != None:
-                df_phys_tp = pd.DataFrame()
-                for length, group in df_raw.groupby("DataLength"):
-                    df_phys_group = df_decoder.decode_frame(group)
-                    df_phys_tp = df_phys_tp.append(df_phys_group)
+            df_phys_temp = pd.DataFrame()
+            for length, group in df_raw.groupby("DataLength"):
+                df_phys_group = df_decoder.decode_frame(group)
+                df_phys_temp = df_phys_temp.append(df_phys_group)
 
-                df_phys = df_phys.append(df_phys_tp.sort_index())
-            else:
-                df_phys = df_phys.append(df_decoder.decode_frame(df_raw))
+            df_phys = df_phys.append(df_phys_temp.sort_index())
 
         # remove duplicates in case multiple DBC files contain identical signals
         df_phys["datetime"] = df_phys.index
@@ -157,7 +152,9 @@ class ProcessData:
 
         # optionally filter and rebaseline the data
         df_phys = self.filter_signals(df_phys)
-        df_phys = self.rebaseline_data(df_phys)
+
+        if not df_phys.empty and type(self.days_offset) == int:
+            df_phys = self.rebaseline_data(df_phys)
 
         return df_phys
 
@@ -165,12 +162,11 @@ class ProcessData:
         """Given a df of physical values, this offsets the timestamp
         to be equal to today, minus a given number of days.
         """
-        if not df_phys.empty and type(self.days_offset) == int:
-            from datetime import datetime, timezone
-            import pandas as pd
+        from datetime import datetime, timezone
+        import pandas as pd
 
-            delta_days = (datetime.now(timezone.utc) - df_phys.index.min()).days - self.days_offset
-            df_phys.index = df_phys.index + pd.Timedelta(delta_days, "day")
+        delta_days = (datetime.now(timezone.utc) - df_phys.index.min()).days - self.days_offset
+        df_phys.index = df_phys.index + pd.Timedelta(delta_days, "day")
 
         return df_phys
 
