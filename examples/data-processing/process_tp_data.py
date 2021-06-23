@@ -23,7 +23,7 @@ def process_tp_example(devices, dbc_path, tp_type):
         df_raw.to_csv(f"{output_folder}/tp_raw_data_combined.csv")
 
         # extract physical values as normal, but add tp_type
-        df_phys = proc.extract_phys(df_raw, tp_type=tp_type)
+        df_phys = proc.extract_phys(df_raw)
         df_phys.to_csv(f"{output_folder}/tp_physical_values.csv")
 
     print("Finished saving CSV output for devices:", devices)
@@ -43,9 +43,9 @@ dbc_paths = [r"dbc_files/tp_j1939.dbc"]
 process_tp_example(devices, dbc_paths, "j1939")
 
 # NMEA 2000 fast packet data (with GNSS position)
-# devices = ["LOG_TP/94C49784"]
-# dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
-# process_tp_example(devices, dbc_paths, "nmea")
+devices = ["LOG_TP/94C49784"]
+dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
+process_tp_example(devices, dbc_paths, "nmea")
 
 # UDS data across two CAN channels
 devices = ["LOG_TP/FE34E37D"]

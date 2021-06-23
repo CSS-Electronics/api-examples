@@ -39,6 +39,6 @@ df_phys_all = add_custom_sig(df_phys_all, "WheelBasedVehicleSpeed", "EngineSpeed
 
 # --------------------------------------------
 # example: resample and restructure data (parameters in columns)
-df_phys_join = restructure_data(df_phys=df_phys_all, res="1S")
+df_phys_join = restructure_data(df_phys=df_phys_all, res="1S", full_col_names=True)
 df_phys_join.to_csv("output_joined.csv")
 print(df_phys_join)

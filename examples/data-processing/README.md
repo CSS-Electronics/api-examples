@@ -22,7 +22,9 @@ Download this folder, enter it, open your command prompt and run below:
 ### Regarding local disk vs S3
 The examples load data from local disk by default. If you want to load data from your S3 server, modify `devices` to include a list of S3 device paths (e.g. `"my_bucket/device_id"`). In addition, you'll modify the `fs` initialization to include your S3 details as below:
 
+```
 fs = setup_fs(s3=True, key="access_key", secret="secret_key", endpoint="endpoint")
+```
 
 If you're using AWS S3, your endpoint would e.g. be `https://s3.us-east-2.amazonaws.com` (if your region is `us-east-2`). A MinIO S3 endpoint would e.g. be `http://192.168.0.1:9000`.
 
