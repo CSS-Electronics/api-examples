@@ -36,26 +36,15 @@ BS_:
 BU_:
 
 
-BO_ 2314277376 SingleFrame: 8 Vector__XXX
- SG_ SF_signal_1 : 16|8@0+ (0.25,0) [0|16383.75] "rpm" Vector__XXX
-
-BO_ 2649751296 TransportMsg: 8 Vector__XXX
- SG_ M_20_signal_1 m32 : 16|8@1+ (0.25,20) [0|0] "unit" Vector__XXX
- SG_ M_20_signal_2 m32 : 24|16@1+ (1,0) [0|0] "unit" Vector__XXX
- SG_ M_60_signal_1 m96 : 24|8@1+ (1,0) [0|0] "unit" Vector__XXX
- SG_ requested_ID M : 0|8@1+ (1,0) [0|255] "unit" Vector__XXX
+BO_ 2566841342 EC1: 40 Vector__XXX
+ SG_ EngineSpeedAtPoint5 : 96|16@1+ (0.125,0) [0|8031.875] "rpm" Vector__XXX
 
 
 
 BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","StandardCAN_FD","ExtendedCAN_FD","J1939PG";
 BA_DEF_  "ProtocolType" STRING ;
 BA_DEF_DEF_  "VFrameFormat" "";
-BA_DEF_DEF_  "ProtocolType" "";
+BA_DEF_DEF_  "ProtocolType" "J1939PG";
 BA_ "ProtocolType" "";
-BA_ "VFrameFormat" BO_ 2314277376 1;
-BA_ "VFrameFormat" BO_ 2649751296 1;
-
-SG_MUL_VAL_ 2649751296 M_20_signal_1 requested_ID 32-32;
-SG_MUL_VAL_ 2649751296 M_20_signal_2 requested_ID 32-32;
-SG_MUL_VAL_ 2649751296 M_60_signal_1 requested_ID 96-96;
+BA_ "VFrameFormat" BO_ 2566841342 1;
 

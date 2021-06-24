@@ -33,26 +33,16 @@ def process_tp_example(devices, dbc_path, tp_type):
 # run different TP examples
 
 # UDS data from Hyundai Kona EV (SoC%)
-devices = ["LOG_TP/17BD1DB7"]
-dbc_paths = [r"dbc_files/tp_uds_hyundai_soc.dbc"]
+devices = ["LOG/17BD1DB7"]
+dbc_paths = [r"dbc_files/tp_uds.dbc"]
 process_tp_example(devices, dbc_paths, "uds")
 
 # J1939 TP data
-devices = ["LOG_TP/FCBF0606"]
+devices = ["LOG/FCBF0606"]
 dbc_paths = [r"dbc_files/tp_j1939.dbc"]
 process_tp_example(devices, dbc_paths, "j1939")
 
 # NMEA 2000 fast packet data (with GNSS position)
-devices = ["LOG_TP/94C49784"]
-dbc_paths = [r"dbc_files/tp_nmea_2.dbc"]
+devices = ["LOG/94C49784"]
+dbc_paths = [r"dbc_files/tp_nmea.dbc"]
 process_tp_example(devices, dbc_paths, "nmea")
-
-# UDS data across two CAN channels
-devices = ["LOG_TP/FE34E37D"]
-dbc_paths = [r"dbc_files/tp_uds_test.dbc"]
-process_tp_example(devices, dbc_paths, "uds")
-
-# UDS example with multiple UDS PIDs on same CAN ID, e.g. 221100, 221101
-devices = ["LOG_TP/0D2C6546"]
-dbc_paths = [r"dbc_files/tp_uds_test.dbc"]
-process_tp_example(devices, dbc_paths, "uds")

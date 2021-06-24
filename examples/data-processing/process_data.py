@@ -1,6 +1,5 @@
 import mdf_iter
 import canedge_browser
-import can_decoder
 
 import pandas as pd
 from datetime import datetime, timezone

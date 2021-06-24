@@ -94,5 +94,5 @@ Often you'll see references to UDS extended PIDs, e.g. `0x220101`. Here, `0x22` 
 
 A UDS DBC file can use extended multiplexing to decode UDS signals, utilizing the SID and DID as sequential multiplexors to distinguish between different UDS service modes and DIDs. See the UDS DBC file examples for a starting point on how this can be constructed.
 
-The script merges the reconstructed UDS frames into the original data (removing the original entries of the response ID). The result is a new raw dataframe that can be processed as you would normally do (using a suitable DBC file). The above example has an associated DBC file, `tp_uds_hyundai_soc.dbc`, which lets you extract e.g. State of Charge.
+The script merges the reconstructed UDS frames into the original data (removing the original entries of the response ID). The result is a new raw dataframe that can be processed as you would normally do (using a suitable DBC file). The above example has an associated DBC file, `tp_uds.dbc`, which lets you extract e.g. State of Charge.
 
