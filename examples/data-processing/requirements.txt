@@ -6,7 +6,7 @@ attrs==21.2.0
 bitstruct==8.11.1
 botocore==1.20.49
 can-decoder>=0.1.1
-canedge-browser>=0.0.6
+canedge-browser>=0.0.7
 canmatrix==0.9.1
 chardet==4.0.0
 click==8.0.1
