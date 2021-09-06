@@ -1,4 +1,4 @@
-def setup_fs(s3, key="", secret="", endpoint="", cert=""):
+def setup_fs(s3, key="", secret="", endpoint="", cert="", passwords={}):
     """Given a boolean specifying whether to use local disk or S3, setup filesystem
     Syntax examples: AWS (http://s3.us-east-2.amazonaws.com), MinIO (http://192.168.0.1:9000)
     The cert input is relevant if you're using MinIO with TLS enabled, for specifying the path to the certficiate.
@@ -27,7 +27,7 @@ def setup_fs(s3, key="", secret="", endpoint="", cert=""):
         import canedge_browser
 
         base_path = Path(__file__).parent
-        fs = canedge_browser.LocalFileSystem(base_path=base_path)
+        fs = canedge_browser.LocalFileSystem(base_path=base_path, passwords=passwords)
 
     return fs
 
@@ -48,7 +48,7 @@ def load_dbc_files(dbc_paths):
 
 
 # -----------------------------------------------
-def list_log_files(fs, devices, start_times, verbose=True):
+def list_log_files(fs, devices, start_times, verbose=True, passwords={}):
     """Given a list of device paths, list log files from specified filesystem.
     Data is loaded based on the list of start datetimes
     """
@@ -59,7 +59,7 @@ def list_log_files(fs, devices, start_times, verbose=True):
     if len(start_times):
         for idx, device in enumerate(devices):
             start = start_times[idx]
-            log_files_device = canedge_browser.get_log_files(fs, [device], start_date=start)
+            log_files_device = canedge_browser.get_log_files(fs, [device], start_date=start, passwords=passwords)
             log_files.extend(log_files_device)
 
     if verbose:
@@ -180,14 +180,14 @@ class ProcessData:
 
         return df_phys
 
-    def get_raw_data(self, log_file, lin=False):
+    def get_raw_data(self, log_file, lin=False, passwords={}):
         """Extract a df of raw data and device ID from log file.
         Optionally include LIN bus data by setting lin=True
         """
         import mdf_iter
 
         with self.fs.open(log_file, "rb") as handle:
-            mdf_file = mdf_iter.MdfFile(handle)
+            mdf_file = mdf_iter.MdfFile(handle, passwords=passwords)
             device_id = self.get_device_id(mdf_file)
 
             if lin:

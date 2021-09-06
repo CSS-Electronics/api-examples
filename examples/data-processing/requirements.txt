@@ -6,7 +6,7 @@ attrs==21.2.0
 bitstruct==8.11.1
 botocore==1.20.49
 can-decoder>=0.1.3
-canedge-browser>=0.0.7
+canedge-browser>=0.0.8
 canmatrix==0.9.1
 chardet==4.0.0
 click==8.0.1
@@ -17,7 +17,7 @@ idna==3.2
 importlib-metadata==4.5.0
 J1939-PGN==0.4
 jmespath==0.10.0
-mdf-iter>=0.0.4
+mdf-iter>=0.0.6
 multidict==5.1.0
 numpy==1.20.3
 pandas==1.2.4

@@ -5,15 +5,17 @@ import pandas as pd
 from datetime import datetime, timezone
 from utils import setup_fs, load_dbc_files, restructure_data, add_custom_sig, ProcessData
 
-# specify devices to process (from local/S3), DBC files and start time
+# specify devices to process (from local/S3), DBC files, start time and optionally passwords
 devices = ["LOG/958D2219"]
+
 dbc_paths = ["dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
 start = datetime(year=2020, month=1, day=13, hour=0, tzinfo=timezone.utc)
+pw = {"default": "password"}
 
 # setup filesystem (local/S3), load DBC files and list log files for processing
-fs = setup_fs(s3=False, key="", secret="", endpoint="")
+fs = setup_fs(s3=False, key="", secret="", endpoint="", passwords=pw)
 db_list = load_dbc_files(dbc_paths)
-log_files = canedge_browser.get_log_files(fs, devices, start_date=start)
+log_files = canedge_browser.get_log_files(fs, devices, start_date=start, passwords=pw)
 print(f"Found a total of {len(log_files)} log files")
 
 # --------------------------------------------
@@ -22,7 +24,7 @@ proc = ProcessData(fs, db_list, signals=[])
 df_phys_all = pd.DataFrame()
 
 for log_file in log_files:
-    df_raw, device_id = proc.get_raw_data(log_file)
+    df_raw, device_id = proc.get_raw_data(log_file, passwords=pw)
     df_phys = proc.extract_phys(df_raw)
     proc.print_log_summary(device_id, log_file, df_phys)
 

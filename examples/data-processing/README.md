@@ -29,6 +29,15 @@ fs = setup_fs(s3=True, key="access_key", secret="secret_key", endpoint="endpoint
 If you're using AWS S3, your endpoint would e.g. be `https://s3.us-east-2.amazonaws.com` (if your region is `us-east-2`). A MinIO S3 endpoint would e.g. be `http://192.168.0.1:9000`.
 
 ---
+### Regarding encrypted log files
+If you need to handle encrypted log files, you can provide a passwords dictionary object with similar structure as the `passwords.json` file used in the CANedge MF4 converters. The object can be provided e.g. as below (or via environmental variables):
+
+```
+pw = {"default": "password"} 			# hardcoded  
+pw = json.load(open("passwords.json"))	# from local JSON file 
+```
+
+---
 
 ### Regarding Transport Protocol example
 The example in `process_tp_data.py` should be seen as a very simplistic TP implementation. It can be used as a starting point and will most likely need to be modified for individual use cases. We of course welcome any questions/feedback on this functionality.
