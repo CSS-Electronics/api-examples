@@ -1,6 +1,6 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations.
-Note: Example assumes v6.0.0+ of asammdf
+Note: Example assumes v6.4.4+ of asammdf
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
@@ -13,15 +13,17 @@ from pathlib import Path
 mdf_extension = ".MF4"
 input_folder = "input"
 output_folder = "output"
+dbc_file = "CSS-Electronics-SAE-J1939-DEMO.dbc"
 
 
 # load MDF/DBC files from input folder
 path = Path(__file__).parent.absolute()
 path_in = Path(path, input_folder)
 path_out = Path(path, output_folder)
+path_in_dbc = Path(path_in, dbc_file)
 
 logfiles = list(path_in.glob("*" + mdf_extension))
-dbc = {"CAN": list(path_in.glob("*" + ".DBC"))}
+dbc = {"CAN": [(path_in_dbc, 0)]}
 
 signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
 print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
@@ -54,9 +56,6 @@ mdf_scaled_signal_list = mdf_scaled.select(signals)
 
 # extract a filtered MDF based on a signal list
 mdf_scaled_signals = mdf_scaled.filter(signals)
-
-# extract a single signal from the unscaled MDF
-mdf_scaled_signal = mdf.get_bus_signal(bus="CAN", name=signals[0], database=dbc["CAN"][0])
 
 # create pandas dataframe from the scaled MDF and e.g. add new signals
 pd = mdf_scaled.to_dataframe(time_as_date=True)
