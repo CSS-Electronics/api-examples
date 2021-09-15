@@ -13,20 +13,17 @@ from pathlib import Path
 mdf_extension = ".MF4"
 input_folder = "input"
 output_folder = "output"
-dbc_file = "CSS-Electronics-SAE-J1939-DEMO.dbc"
-
 
 # load MDF/DBC files from input folder
 path = Path(__file__).parent.absolute()
 path_in = Path(path, input_folder)
 path_out = Path(path, output_folder)
-path_in_dbc = Path(path_in, dbc_file)
 
+dbc_files = {"CAN": [(dbc, 0) for dbc in list(path_in.glob("*" + ".DBC"))]}
 logfiles = list(path_in.glob("*" + mdf_extension))
-dbc = {"CAN": [(path_in_dbc, 0)]}
 
 signals = ["EngineSpeed", "WheelBasedVehicleSpeed"]
-print("Log file(s): ", logfiles, "\nDBC(s): ", dbc)
+print("Log file(s): ", logfiles, "\nDBC(s): ", dbc_files)
 
 # concatenate MDF files from input folder and export as CSV incl. timestamps (localized time)
 mdf = MDF.concatenate(logfiles)
@@ -44,7 +41,7 @@ mdf_filter = mdf.filter(["CAN_DataFrame.ID", "CAN_DataFrame.DataBytes"])
 mdf.save(Path(path_out, "filtered"), overwrite=True)
 
 # DBC convert the unfiltered MDF + save & export resampled data
-mdf_scaled = mdf.extract_bus_logging(dbc, ignore_invalid_signals=True)
+mdf_scaled = mdf.extract_bus_logging(dbc_files, ignore_invalid_signals=True)
 
 mdf_scaled.save("scaled", overwrite=True)
 mdf_scaled.export(
