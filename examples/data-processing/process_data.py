@@ -36,7 +36,7 @@ def ratio(s1, s2):
     return s2 / s1 if s1 else np.nan
 
 
-df_phys_all = add_custom_sig(df_phys_all, "WheelBasedVehicleSpeed", "EngineSpeed", ratio, "RatioRpmSpeed")
+# df_phys_all = add_custom_sig(df_phys_all, "WheelBasedVehicleSpeed", "EngineSpeed", ratio, "RatioRpmSpeed")
 
 # --------------------------------------------
 # example: resample and restructure data (parameters in columns)
