@@ -1,6 +1,6 @@
-# CANedge API Examples - Process Log File Data (Local, S3)
+# Python CAN bus API examples | CANedge
 
-This project includes Python examples of how to process data from your [CANedge](https://www.csselectronics.com/) CAN/LIN data loggers.
+This project includes Python examples of how to process MF4 log files with CAN/LIN data from your [CANedge](https://www.csselectronics.com/) data loggers. The examples focus on the use of our Python API modules (canedge_browser, mdf_iter, can_decoder) for use with the CANedge log file formats (MF4, MFC, MFE, MFM). However, you'll also find other API examples incl. for the asammdf Python API, MATLAB, S3 and more.
 
 ---
 ## Features
