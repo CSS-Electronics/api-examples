@@ -1,4 +1,4 @@
-# MATLAB + CANedge examples
+# Process MF4/MAT CAN bus data from the CANedge via MATLAB
 
 Here you'll find examples for loading CANedge data in MATLAB in different ways.  We recommend that you check out our intro to using [MATLAB with CAN bus data](https://www.csselectronics.com/pages/matlab-mdf-mf4-can-bus) from the CANedge.
 

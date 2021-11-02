@@ -1,6 +1,6 @@
-# Python CAN bus API examples | CANedge
+# CAN bus API examples (Python/MATLAB) | CANedge
 
-This project includes Python examples of how to process MF4 log files with CAN/LIN data from your [CANedge](https://www.csselectronics.com/) data loggers. The examples focus on the use of our Python API modules (canedge_browser, mdf_iter, can_decoder) for use with the CANedge log file formats (MF4, MFC, MFE, MFM). However, you'll also find other API examples incl. for the asammdf Python API, MATLAB, S3 and more.
+This project includes Python and MATLAB examples of how to process MF4 log files with CAN/LIN data from your [CANedge](https://www.csselectronics.com/) data loggers. Most examples focus on the use of our Python API modules (`canedge_browser`, `mdf_iter`, `can_decoder`) for use with the CANedge log file formats (`MF4`, `MFC`, `MFE`, `MFM`). However, you'll also find other script examples incl. for the asammdf Python API, MATLAB, S3 and more.
 
 ---
 ## Features
@@ -9,24 +9,23 @@ For most use cases we recommend to start with the below examples:
 - data-processing: List specific log files, load them and DBC decode the data (local, S3)
 
 For some use cases the below examples may be useful:
-- asammdf-basics: Examples of using the asammdf API for processing MDF4 data
-- s3-basics: Examples of how to download, upload or list specific objects on your server
-- s3-events: Using AWS Lambda (for event based data processing)
-- s3-events: Using MinIO notifications (for event based data processing)
-- misc: Example of automating the use of the MDF4 converters
-- misc: Basic e-mail sender function
+- other/asammdf-basics: Examples of using the asammdf API for processing MDF4 data
+- other/matlab-basics: Examples of how to load and use MF4/MAT CAN bus data 
+- other/s3-basics: Examples of how to download, upload or list specific objects on your server
+- other/s3-events: Using AWS Lambda or MinIO notifications (for event based data processing)
+- other/misc: Example of automating the use of the MDF4 converters and misc tools
 
 ```
 
 ---
 
-## Installation
+## Installation of our Python API
 We recommend to install Python 3.7 for Windows ([32 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9.exe)/[64 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe)) or [Linux](https://www.python.org/downloads/release/python-379/).
 
 Next, intall script dependencies via the `requirements.txt` in each folder:  
   ``pip install -r requirements.txt``
 
-### Platforms supported
+### Platforms supported by our Python API
 The below platforms are currently supported for the `mdf_iter`, `canedge_browser` and `can_decoder` modules:
 
 - Linux: x86-64 (Python 3.5, 3.6, 3.7, 3.8)
