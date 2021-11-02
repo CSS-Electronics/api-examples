@@ -1,29 +1,48 @@
-% This script uses the MATLAB Vehicle Network Toolbox to load
-% finalized & sorted MF4 files from the CANedge (Firmware 01.04.01+)
-% See also below links:
-% - https://www.mathworks.com/help/vnt/mdf-files.html
-% - https://www.mathworks.com/help/vnt/ug/work-with-unfinalized-and-unsorted-mdf-files.html
-% - https://se.mathworks.com/help/vnt/ug/reading-data-from-mdf-files.html
-% - https://se.mathworks.com/help/vnt/ug/using-mdf-files-via-mdf-datastore.html
-% - https://se.mathworks.com/help/vnt/ug/decoding-can-data-from-mdf-files.html
+clear, clc, close all
 
-% load a 'sorted & finalized' MF4 file (via the mdf2finalized converter)
-m = mdf('00000014_fin.MF4')
+% set index of CAN channel (MATLAB finalization: 8 | mdf2finalized: 1) 
+can_idx = 8;
 
-% or, finalize an unfinalized file via MATLAB and load it (support in MATLAB 2021b+)
-finalizedPath = mdfFinalize("00000014.MF4");
-m = mdf(finalizedPath);
+% ------------------------------------------------------------------------
+% finalize & load MF4 "in place" (overwrites original file)
+% m = mdf(mdfFinalize("LOG/11111111/00000012/00000001.MF4"));
 
-% extract 5 rows into a timetable
-rawTimeTable = read(m, 1, m.ChannelNames{1}, 1, 5)
+% finalize & load MF4 "out of place" (makes a copy of original file)
+try
+    finalizedPath2 = mdfFinalize("LOG/11111111/00000012/00000001.MF4", "LOG/11111111/00000012/00000001_fin.MF4");
+    m = mdf(finalizedPath2);
+catch ME
+    disp(ME.message)
+end
 
-% extract data using DBC file (note: MATLAB sees the CANedge data as CAN FD
-% regardless of whether it's Classical CAN or CAN FD)
-db = canDatabase('my_dbc.dbc');
-msgTimetable    = canFDMessageTimetable(rawTimeTable, db)
+% load an MF4 which has already been 'finalized' via MATLAB or mdf2finalized
+m = mdf("LOG/11111111/00000012/00000001_fin.MF4");
 
-% create a signal time table for a specific CAN message and create a plot
-signalTimetable1 = canSignalTimetable(msgTimetable, "Message1")
-plot(signalTimetable1.Time, signalTimetable1.Signal1)
+% extract CAN data into timetable
+rawTimeTable = read(m,can_idx,m.ChannelNames{can_idx});
 
 
+
+% ------------------------------------------------------------------------
+% decode CAN data using DBC, use absolute date & time and extract a specific message
+canDB = canDatabase('dbc_files/canmod-gps.dbc');
+msgTimetableGPS = canFDMessageTimetable(rawTimeTable, canDB);
+msgTimetableGPS.Time = msgTimetableGPS.Time + m.InitialTimestamp;
+msgSpeed = canSignalTimetable(msgTimetableGPS, "gnss_speed");
+
+% decode J1939 data (first convert data to 'Classical' CAN by removing EDL)
+rawTimeTable = removevars(rawTimeTable, "CAN_DataFrame_EDL");
+
+canDB = canDatabase('dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc');
+msgTimetableJ1939 = j1939ParameterGroupTimetable(rawTimeTable, canDB);
+msgTimetableJ1939.Time = msgTimetableJ1939.Time + m.InitialTimestamp;
+msgEEC1 = j1939SignalTimetable(msgTimetableJ1939, "ParameterGroups","EEC1");
+
+% plot select decoded signals 
+ax1 = subplot(2, 1, 1);
+plot(msgSpeed.Time, msgSpeed.Speed)
+ylabel("Speed (m/s)")
+ax2 = subplot(2, 1, 2);
+plot(msgEEC1.Time, msgEEC1.EngineSpeed)
+ylabel("Engine Speed (rpm)")
+linkaxes([ax1,ax2],'x');

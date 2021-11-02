@@ -12,3 +12,6 @@ LOG2/
 *LIN.dbc
 *NMEA-2000-CSS-Electronics-v*
 *find_data_event.py
+*CSS-Electronics-J1939-2021-08_v1.0.dbc
+logging.py
+*matlab_raw_to_tallarray.m
