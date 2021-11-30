@@ -336,6 +336,11 @@ class MultiFrameDecoder:
 
         return pgn
 
+    def calculate_sa(self, frame_id):
+        sa = frame_id & 0x000000FF
+
+        return sa
+
     def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
         new_frame = base_frame
         new_frame.at["DataBytes"] = payload_concatenated
@@ -380,6 +385,8 @@ class MultiFrameDecoder:
             # filter raw data for response ID and extract a 'base frame'
             if self.tp_type == "nmea" or self.tp_type == "j1939":
                 df_raw_res_id = df_raw_tp[df_raw_tp["ID"].apply(self.calculate_pgn).isin([res_id, bam_pgn])]
+                df_raw_res_id = df_raw_res_id.copy()
+                df_raw_res_id["SA"] = df_raw_res_id.ID.apply(self.calculate_sa)
             else:
                 df_raw_res_id = df_raw_tp[df_raw_tp["ID"].isin([res_id])]
 
@@ -390,7 +397,7 @@ class MultiFrameDecoder:
 
                 # if J1939, we can't group by CAN ID (as we need both bam_pgn and response)
                 if self.tp_type == "j1939":
-                    group = "DataLength"
+                    group = "SA"
                 else:
                     group = "ID"
 
