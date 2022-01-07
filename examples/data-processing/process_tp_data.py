@@ -37,6 +37,11 @@ devices = ["LOG/17BD1DB7"]
 dbc_paths = [r"dbc_files/tp_uds.dbc"]
 process_tp_example(devices, dbc_paths, "uds")
 
+# UDS data from Nissan Leaf 2019 (SoC%)
+devices = ["LOG/2F6913DB"]
+dbc_paths = [r"dbc_files/tp_uds_nissan.dbc"]
+process_tp_example(devices, dbc_paths, "uds")
+
 # J1939 TP data
 devices = ["LOG/FCBF0606"]
 dbc_paths = [r"dbc_files/tp_j1939.dbc"]

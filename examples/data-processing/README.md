@@ -11,7 +11,7 @@ Download this folder, enter it, open your command prompt and run below:
 
 ## File overview
 
-- `LOG/`: Contains raw J1939 data samples
+- `LOG/`: Contains raw data samples (J1939, NMEA 2000, UDS)
 - `dbc_files/`: Contains demo/test DBC files for use in the examples
 - `process_data.py`: List log files between dates, DBC decode them and perform various processing
 - `process_tp_data.py`: Example of how multiframe data can be handled incl. DBC decoding (Transport Protocol)
@@ -40,7 +40,7 @@ pw = json.load(open("passwords.json"))	# from local JSON file
 ---
 
 ### Regarding Transport Protocol example
-The example in `process_tp_data.py` should be seen as a very simplistic TP implementation. It can be used as a starting point and will most likely need to be modified for individual use cases. We of course welcome any questions/feedback on this functionality.
+The example in `process_tp_data.py` should be seen as a simplistic TP implementation. It can be used as a starting point and will most likely need to be modified for individual use cases. We of course welcome any questions/feedback on this functionality.
 
 The basic concept works as follows:
 
@@ -67,7 +67,7 @@ df_raw = tp.combine_tp_frames(df_raw)
 
 
 #### UDS example
-For UDS basics see the [Wikipedia article](https://en.wikipedia.org/wiki/Unified_Diagnostic_Services). The UDS example for device `17BD1DB7` shows UDS response data from a Hyunda Kona EV. 
+For UDS basics see our [UDS tutorial](https://www.csselectronics.com/pages/uds-protocol-tutorial-unified-diagnostic-services). The UDS example for device `17BD1DB7` shows UDS response data from a Hyundai Kona EV. 
 
 Below is a snippet of raw CAN data output before TP processing:
 
@@ -105,3 +105,4 @@ A UDS DBC file can use extended multiplexing to decode UDS signals, utilizing th
 
 The script merges the reconstructed UDS frames into the original data (removing the original entries of the response ID). The result is a new raw dataframe that can be processed as you would normally do (using a suitable DBC file). The above example has an associated DBC file, `tp_uds.dbc`, which lets you extract e.g. State of Charge.
 
+The script also contains an example of a proprietary UDS-style request/response from a Nissan Leaf 2019 for State of Charge (SoC) and battery pack temperatures.
