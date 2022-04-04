@@ -15,11 +15,17 @@ def setup_fs(s3, key="", secret="", endpoint="", cert="", passwords={}):
             fs = s3fs.S3FileSystem(key=key, secret=secret, default_block_size=block_size)
         elif cert != "":
             fs = s3fs.S3FileSystem(
-                key=key, secret=secret, client_kwargs={"endpoint_url": endpoint, "verify": cert}, default_block_size=block_size
+                key=key,
+                secret=secret,
+                client_kwargs={"endpoint_url": endpoint, "verify": cert},
+                default_block_size=block_size,
             )
         else:
             fs = s3fs.S3FileSystem(
-                key=key, secret=secret, client_kwargs={"endpoint_url": endpoint}, default_block_size=block_size
+                key=key,
+                secret=secret,
+                client_kwargs={"endpoint_url": endpoint},
+                default_block_size=block_size,
             )
 
     else:
@@ -34,8 +40,7 @@ def setup_fs(s3, key="", secret="", endpoint="", cert="", passwords={}):
 
 # -----------------------------------------------
 def load_dbc_files(dbc_paths):
-    """Given a list of DBC file paths, create a list of conversion rule databases
-    """
+    """Given a list of DBC file paths, create a list of conversion rule databases"""
     import can_decoder
     from pathlib import Path
 
@@ -108,7 +113,12 @@ def add_custom_sig(df_phys, signal1, signal2, function, new_signal):
         s1 = df_phys[df_phys["Signal"] == signal1]["Physical Value"].rename(signal1)
         s2 = df_phys[df_phys["Signal"] == signal2]["Physical Value"].rename(signal2)
 
-        df_new_sig = pd.merge_ordered(s1, s2, on="TimeStamp", fill_method="ffill",).set_index("TimeStamp")
+        df_new_sig = pd.merge_ordered(
+            s1,
+            s2,
+            on="TimeStamp",
+            fill_method="ffill",
+        ).set_index("TimeStamp")
         df_new_sig = df_new_sig.apply(lambda x: function(x[0], x[1]), axis=1).dropna().rename("Physical Value").to_frame()
         df_new_sig["Signal"] = new_signal
         df_phys = df_phys.append(df_new_sig)
@@ -150,7 +160,7 @@ class ProcessData:
         # remove duplicates in case multiple DBC files contain identical signals
         df_phys["datetime"] = df_phys.index
         df_phys = df_phys.drop_duplicates(keep="first")
-        df_phys = df_phys.drop("datetime", 1)
+        df_phys = df_phys.drop(labels="datetime", axis=1)
 
         # optionally filter and rebaseline the data
         df_phys = self.filter_signals(df_phys)
@@ -173,8 +183,7 @@ class ProcessData:
         return df_phys
 
     def filter_signals(self, df_phys):
-        """Given a df of physical values, return only signals matched by filter
-        """
+        """Given a df of physical values, return only signals matched by filter"""
         if not df_phys.empty and len(self.signals):
             df_phys = df_phys[df_phys["Signal"].isin(self.signals)]
 
@@ -204,8 +213,7 @@ class ProcessData:
         return mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
 
     def print_log_summary(self, device_id, log_file, df_phys):
-        """Print summary information for each log file
-        """
+        """Print summary information for each log file"""
         if self.verbose:
             print(
                 "\n---------------",
@@ -246,7 +254,18 @@ class MultiFrameDecoder:
             "CONSEQ_FRAME": 0x20,
             "ff_payload_start": 2,
             "bam_pgn": -1,
-            "res_id_list_hex": ["0x7E0", "0x7E9", "0x7EA", "0x7EB", "0x7EC", "0x7ED", "0x7EE", "0x7EF", "0x7EA", "0x7BB"],
+            "res_id_list_hex": [
+                "0x7E0",
+                "0x7E9",
+                "0x7EA",
+                "0x7EB",
+                "0x7EC",
+                "0x7ED",
+                "0x7EE",
+                "0x7EF",
+                "0x7EA",
+                "0x7BB",
+            ],
         }
 
         frame_struct_j1939 = {
@@ -263,7 +282,7 @@ class MultiFrameDecoder:
 
         frame_struct_nmea = {
             "SINGLE_FRAME_MASK": 0xFF,
-            "FIRST_FRAME_MASK": 0x0F,
+            "FIRST_FRAME_MASK": 0x1F,
             "CONSEQ_FRAME_MASK": 0x00,
             "SINGLE_FRAME": 0xFF,
             "FIRST_FRAME": 0x00,
@@ -425,9 +444,7 @@ class MultiFrameDecoder:
                             first_frame_test = False
 
                         # if single frame, save frame directly (excl. 1st byte)
-                        if self.tp_type != "nmea" and (
-                            first_byte & self.frame_struct["SINGLE_FRAME_MASK"] == self.frame_struct["SINGLE_FRAME"]
-                        ):
+                        if self.tp_type != "nmea" and (first_byte & self.frame_struct["SINGLE_FRAME_MASK"] == self.frame_struct["SINGLE_FRAME"]):
                             new_frame = self.construct_new_tp_frame(base_frame, row["DataBytes"], row["ID"])
                             frame_list.append(new_frame.values.tolist())
                             frame_timestamp_list.append(index)
