@@ -132,11 +132,20 @@ def add_custom_sig(df_phys, signal1, signal2, function, new_signal):
 # -----------------------------------------------
 class ProcessData:
     def __init__(self, fs, db_list, signals=[], days_offset=None, verbose=True):
+        from datetime import datetime, timedelta
+
         self.db_list = db_list
         self.signals = signals
         self.fs = fs
         self.days_offset = days_offset
         self.verbose = verbose
+
+        if self.verbose == True and self.days_offset != None:
+            date_offset = (datetime.today() - timedelta(days=self.days_offset)).strftime("%Y-%m-%d")
+            print(
+                f"Warning: days_offset = {self.days_offset}, meaning data is offset to start at {date_offset}.\nThis is intended for sample data testing only. Set days_offset = None when processing your own data."
+            )
+
         return
 
     def extract_phys(self, df_raw):
