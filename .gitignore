@@ -16,3 +16,7 @@ LOG2/
 logging.py
 *matlab_raw_to_tallarray.m
 *env/*
+env/
+*requirements_updated_experimental.txt
+*_fin.MF4
+*.idea

@@ -1,11 +1,6 @@
 # CANedge data processing examples
 
-Here you'll find examples for processing raw CANedge data to physical values - start with `process_data.py`.
-
-## Installation
-
-Download this folder, enter it, open your command prompt and run below:  
-  ``pip install -r requirements.txt``
+Here you'll find examples for processing raw CANedge data to physical values.
 
 ---
 
@@ -16,6 +11,12 @@ Download this folder, enter it, open your command prompt and run below:
 - `process_data.py`: List log files between dates, DBC decode them and perform various processing
 - `process_tp_data.py`: Example of how multiframe data can be handled incl. DBC decoding (Transport Protocol)
 - `utils.py`: Functions/classes used in the above scripts (note: Identical to utils.py from the dashboard-writer repo)
+
+---
+
+## Installation
+
+See the README in the above folder.
 
 ---
 

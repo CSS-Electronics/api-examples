@@ -103,6 +103,19 @@ def restructure_data(df_phys, res, full_col_names=False, pgn_names=False):
     return df_phys_join
 
 
+def test_signal_threshold(df_phys, signal, threshold):
+    """Illustrative example for how to extract a signal and evaluate statistical values
+    vs. defined thresholds. The function can be easily modified for your needs.
+    """
+    df_signal = df_phys[df_phys["Signal"] == signal]["Physical Value"]
+
+    stats = df_signal.agg(["count", "min", "max", "mean", "std"])
+    delta = stats["max"] - stats["min"]
+
+    if delta > threshold:
+        print(f"{signal} exhibits a 'max - min' delta of {delta} exceeding threshold of {threshold}")
+
+
 def add_custom_sig(df_phys, signal1, signal2, function, new_signal):
     """Helper function for calculating a new signal based on two signals and a function.
     Returns a dataframe with the new signal name and physical values

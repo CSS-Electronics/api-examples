@@ -3,13 +3,7 @@ import canedge_browser
 
 import pandas as pd
 from datetime import datetime, timezone
-from utils import (
-    setup_fs,
-    load_dbc_files,
-    restructure_data,
-    add_custom_sig,
-    ProcessData,
-)
+from utils import setup_fs, load_dbc_files, restructure_data, add_custom_sig, ProcessData, test_signal_threshold
 
 # specify devices to process (from local/S3), DBC files, start time and optionally passwords
 devices = ["LOG/958D2219"]
@@ -25,7 +19,7 @@ log_files = canedge_browser.get_log_files(fs, devices, start_date=start, passwor
 print(f"Found a total of {len(log_files)} log files")
 
 # --------------------------------------------
-# perform data processing of each log file
+# perform data processing of each log file (e.g. evaluation of signal stats vs. thresholds)
 proc = ProcessData(fs, db_list, signals=[])
 df_phys_all = pd.DataFrame()
 
@@ -34,7 +28,10 @@ for log_file in log_files:
     df_phys = proc.extract_phys(df_raw)
     proc.print_log_summary(device_id, log_file, df_phys)
 
+    test_signal_threshold(df_phys=df_phys, signal="EngineSpeed", threshold=800)
+
     df_phys_all = df_phys_all.append(df_phys)
+
 
 # --------------------------------------------
 # example: Add a custom signal
@@ -48,4 +45,4 @@ def ratio(s1, s2):
 # example: resample and restructure data (parameters in columns)
 df_phys_join = restructure_data(df_phys=df_phys_all, res="1S", full_col_names=True)
 df_phys_join.to_csv("output_joined.csv")
-print(df_phys_join)
+print("\nConcatenated DBC decoded data:\n", df_phys_join)

@@ -6,10 +6,10 @@ This project includes Python and MATLAB examples of how to process MF4 log files
 ## Features
 ```
 For most use cases we recommend to start with the below examples:
-- data-processing: List specific log files, load them and DBC decode the data (local, S3)
+- data-processing: List log files, load them and DBC decode the data (local, S3)
 
 For some use cases the below examples may be useful:
-- other/asammdf-basics: Examples of using the asammdf API for processing MDF4 data
+- other/asammdf-basics: Load and concatenate MF4 logs, DBC decode them - and save as new MF4 files
 - other/matlab-basics: Examples of how to load and use MF4/MAT CAN bus data 
 - other/s3-basics: Examples of how to download, upload or list specific objects on your server
 - other/s3-events: Using AWS Lambda or MinIO notifications (for event based data processing)
@@ -19,11 +19,28 @@ For some use cases the below examples may be useful:
 
 ---
 
-## Installation of our Python API
-We recommend to install Python 3.7 for Windows ([32 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9.exe)/[64 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe)) or [Linux](https://www.python.org/downloads/release/python-379/).
+## Installation 
 
-Next, intall script dependencies via the `requirements.txt` in each folder:  
-  ``pip install -r requirements.txt``
+- Install Python 3.7 for Windows ([32 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9.exe)/[64 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe)) or [Linux](https://www.python.org/downloads/release/python-379/) (_enable 'Add to PATH'_)
+- Download this project as a zip via the green button and unzip it 
+- Open the folder with the `requirements.txt` file and enter below in your [command prompt](https://www.youtube.com/watch?v=bgSSJQolR0E&t=47s):
+
+##### Windows 
+```
+python -m venv env & env\Scripts\activate & pip install -r requirements.txt
+python script_to_run.py
+```
+
+##### Linux 
+```
+python -m venv env && source env/bin/activate && pip install -r requirements.txt
+python script_to_run.py
+```
+
+If you close your command prompt and later need to re-activate the virtual environment, use `env\Scripts\activate`.
+
+Note: We recommend using virtual environments to 'isolate' dependencies between different scripts. You can, of course, also choose to install the dependencies globally to avoid using the virtual environment when running scripts.
+
 
 ### Platforms supported by our Python API
 The below platforms are currently supported for the `mdf_iter`, `canedge_browser` and `can_decoder` modules:
@@ -34,9 +51,7 @@ The below platforms are currently supported for the `mdf_iter`, `canedge_browser
 ---
 
 ## Sample data (MDF4 & DBC)
-You can download J1939 MDF4 & DBC samples from the [CANedge Intro docs](https://canlogger.csselectronics.com/canedge-getting-started/log-file-tools/). 
-
-The `data-processing/` folder also includes ready-to-test J1939 log files and a demo DBC.
+The various folders include sample log files and DBC files. Once you've tested a script with the sample data, you can replace it with your own.
 
 ---
 
@@ -52,15 +67,15 @@ There are many ways that you can work with the data from your CANedge devices. M
 
 If you have needs that are not covered by these modules, you can check out the other examples using the asammdf API, the AWS/MinIO S3 API and our MDF4 converters.
 
-If in doubt, [contact us](https://www.csselectronics.com/screen/page/can-bus-logger-contact) for sparring.
+If in doubt, [contact us](https://www.csselectronics.com/pages/contact-us) for sparring.
 
 ---
 ## About the CANedge
 
 For details on installation and how to get started, see the documentation:
-- [CANedge Docs](https://www.csselectronics.com/screen/page/can-logger-resources)  
-- [CANedge1 Product Page](https://www.csselectronics.com/screen/product/can-logger-sd-canedge1/language/en)  
-- [CANedge2 Product Page](https://www.csselectronics.com/screen/product/can-lin-logger-wifi-canedge2/language/en)  
+- [CANedge Docs](https://www.csselectronics.com/pages/can-bus-hardware-software-docs)  
+- [CANedge1 Product Page](https://www.csselectronics.com/products/can-logger-sd-canedge1)  
+- [CANedge2 Product Page](https://www.csselectronics.com/products/can-bus-data-logger-wifi-canedge2)  
 
 ---
 ## Contribution & support
@@ -68,4 +83,4 @@ Feature suggestions, pull requests or questions are welcome!
 
 You can contact us at CSS Electronics below:  
 - [www.csselectronics.com](https://www.csselectronics.com)  
-- [Contact form](https://www.csselectronics.com/screen/page/can-bus-logger-contact)  
+- [Contact form](https://www.csselectronics.com/pages/contact-us)  
