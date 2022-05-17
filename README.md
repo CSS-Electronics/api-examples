@@ -37,16 +37,7 @@ python -m venv env && source env/bin/activate && pip install -r requirements.txt
 python script_to_run.py
 ```
 
-If you close your command prompt and later need to re-activate the virtual environment, use `env\Scripts\activate`.
-
-Note: We recommend using virtual environments to 'isolate' dependencies between different scripts. You can, of course, also choose to install the dependencies globally to avoid using the virtual environment when running scripts.
-
-
-### Platforms supported by our Python API
-The below platforms are currently supported for the `mdf_iter`, `canedge_browser` and `can_decoder` modules:
-
-- Linux: x86-64 (Python 3.5, 3.6, 3.7, 3.8)
-- Windows: x86-64 (Python 3.7, 3.8), x86 (Python 3.7, 3.8)
+If you later need to re-activate the virtual environment, use `env\Scripts\activate`.
 
 ---
 
