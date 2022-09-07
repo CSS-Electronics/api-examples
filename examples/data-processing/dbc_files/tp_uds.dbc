@@ -37,15 +37,15 @@ BU_:
 
 
 BO_ 2028 Battery: 62 Vector__XXX
- SG_ M_SID_0x220101_StateOfChargeBMS m257 : 56|8@1+ (0.5,0) [0|0] "%" Vector__XXX
- SG_ response m98M : 15|16@0+ (1,0) [0|0] "unit" Vector__XXX
- SG_ service M : 7|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ M_SID_0x220101_StateOfChargeBMS m257 : 64|8@1+ (0.5,0) [0|0] "%" Vector__XXX
+ SG_ response m98M : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 1979 Temperature: 54 Vector__XXX
- SG_ M_SID_0x220100_IndoorTemp m256 : 64|8@1+ (0.5,-40) [0|0] "degC" Vector__XXX
- SG_ response m98 : 15|16@0+ (1,0) [0|0] "unit" Vector__XXX
- SG_ service M : 7|8@0+ (1,0) [0|0] "" Vector__XXX
- SG_ M_SID_0x220100_OutdoorTemp : 79|8@0+ (0.5,-40) [0|0] "" Vector__XXX
+ SG_ M_SID_0x220100_IndoorTemp m256 : 72|8@1+ (0.5,-40) [0|0] "degC" Vector__XXX
+ SG_ response m98 : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ M_SID_0x220100_OutdoorTemp : 87|8@0+ (0.5,-40) [0|0] "" Vector__XXX
 
 
 

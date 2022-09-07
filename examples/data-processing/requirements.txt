@@ -19,8 +19,8 @@ J1939-PGN==0.4
 jmespath==0.10.0
 mdf-iter>=0.0.7
 multidict==5.1.0
-numpy==1.20.3
-pandas==1.2.4
+numpy==1.23.2
+pandas==1.4.3
 pathlib2==2.3.5
 python-dateutil==2.8.1
 pytz==2021.1

@@ -172,12 +172,12 @@ class ProcessData:
         for db in self.db_list:
             df_decoder = can_decoder.DataFrameDecoder(db)
 
-            df_phys_temp = pd.DataFrame()
+            df_phys_temp = []
             for length, group in df_raw.groupby("DataLength"):
                 df_phys_group = df_decoder.decode_frame(group)
-                df_phys_temp = df_phys_temp.append(df_phys_group)
+                df_phys_temp.append(df_phys_group)
 
-            df_phys = df_phys.append(df_phys_temp.sort_index())
+            df_phys = pd.concat(df_phys_temp,ignore_index=False).sort_index()
 
         # remove duplicates in case multiple DBC files contain identical signals
         df_phys["datetime"] = df_phys.index
@@ -274,9 +274,10 @@ class MultiFrameDecoder:
             "SINGLE_FRAME": 0x00,
             "FIRST_FRAME": 0x10,
             "CONSEQ_FRAME": 0x20,
-            "ff_payload_start": 2,
+            "ff_payload_start": 1,
             "bam_pgn": -1,
             "res_id_list_hex": [
+                "0x7A8",
                 "0x7E0",
                 "0x7E9",
                 "0x7EA",
@@ -287,6 +288,10 @@ class MultiFrameDecoder:
                 "0x7EF",
                 "0x7EA",
                 "0x7BB",
+                "0x7C8",
+                "0x7CE",
+                "0x7D1",
+                "0x17fe007b",
             ],
         }
 
@@ -383,13 +388,13 @@ class MultiFrameDecoder:
         return sa
 
     def construct_new_tp_frame(self, base_frame, payload_concatenated, can_id):
-        new_frame = base_frame
-        new_frame.at["DataBytes"] = payload_concatenated
-        new_frame.at["DLC"] = 0
-        new_frame.at["DataLength"] = len(payload_concatenated)
+        new_frame = base_frame.copy(deep=True)
+        new_frame.loc["DataBytes"] = payload_concatenated
+        new_frame.loc["DLC"] = 0
+        new_frame.loc["DataLength"] = len(payload_concatenated)
 
         if can_id:
-            new_frame.at["ID"] = can_id
+            new_frame.loc["ID"] = can_id
 
         return new_frame
 

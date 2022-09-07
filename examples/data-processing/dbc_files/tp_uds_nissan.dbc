@@ -37,12 +37,12 @@ BU_:
 
 
 BO_ 1979 SoC_Temp: 55 Vector__XXX
- SG_ SoC m1 : 271|24@0+ (1e-04,0) [0|0] "%" Vector__XXX
- SG_ BatPackTemp1 m4 : 32|8@1+ (1,0) [0|0] "%" Vector__XXX
- SG_ BatPackTemp2 m4 : 56|8@1+ (1,0) [0|0] "%" Vector__XXX
- SG_ BatPackTemp4 m4 : 104|8@1+ (1,0) [0|0] "%" Vector__XXX
- SG_ response m97M : 8|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ service M : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ SoC m1 : 279|24@0+ (0.0001,0) [0|0] "%" Vector__XXX
+ SG_ BatPackTemp1 m4 : 40|8@1+ (1,0) [0|0] "%" Vector__XXX
+ SG_ BatPackTemp2 m4 : 64|8@1+ (1,0) [0|0] "%" Vector__XXX
+ SG_ BatPackTemp4 m4 : 112|8@1+ (1,0) [0|0] "%" Vector__XXX
+ SG_ response m97M : 16|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ service M : 8|8@1+ (1,0) [0|0] "" Vector__XXX
 
 
 
