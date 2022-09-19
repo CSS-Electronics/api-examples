@@ -21,7 +21,7 @@ For some use cases the below examples may be useful:
 
 ## Installation 
 
-- Install Python 3.7 for Windows ([32 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9.exe)/[64 bit](https://www.python.org/ftp/python/3.7.9/python-3.7.9-amd64.exe)) or [Linux](https://www.python.org/downloads/release/python-379/) (_enable 'Add to PATH'_)
+- Install Python 3.8.10 for Windows ([32 bit](https://www.python.org/ftp/python/3.8.10/python-3.8.10.exe)/[64 bit](https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe)) or [Linux](https://www.python.org/downloads/release/python-3810/) (_enable 'Add to PATH'_)
 - Download this project as a zip via the green button and unzip it 
 - Open the folder with the `requirements.txt` file and enter below in your [command prompt](https://www.youtube.com/watch?v=bgSSJQolR0E&t=47s):
 

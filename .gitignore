@@ -20,3 +20,5 @@ env/
 *requirements_updated_experimental.txt
 *_fin.MF4
 *.idea
+*tp-uds-kia-ev6.dbc
+examples/other/matlab-basics/LOG_mf4_decoded/*
