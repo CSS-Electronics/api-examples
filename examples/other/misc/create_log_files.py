@@ -1,16 +1,7 @@
-# this script can be used to generate log files for the CANedge e.g. for testing WiFi transfer
-
 import os
 import hashlib
 
-# specify details of log files (device ID should match your test device)
-device_id = "534F281B"
-file_type = "MF4"
-sessions = 120
-splits = 50
-size_bytes = 2 * 1024 * 1024
 
-# function for creating files
 def sha256_file(path):
     digest = hashlib.sha256()
     with open(path, "rb") as f:
@@ -21,10 +12,17 @@ def sha256_file(path):
             digest.update(buf)
     return digest.hexdigest().upper()
 
-# run loop to create log files in folders
+
+device_id = "3851A144" #"1973B1D6"
+file_type = "MF4"
+sessions = 30
+splits = 50
+session_offset = 20000
+size_bytes = 2 * 1024 * 1024
+
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
-for session_no in range(1, sessions + 1):
+for session_no in range(session_offset, sessions + session_offset):
     for split_no in range(1, splits + 1):
         tmp_file_name = "{}.mf4".format(split_no)
         tmp_file_path = os.path.join(dir_path, tmp_file_name)
@@ -36,9 +34,7 @@ for session_no in range(1, sessions + 1):
         # Calculate digest of file
         digest = sha256_file(tmp_file_path)
 
-        # create folder name
         folder = f'{session_no}'.zfill(8)
-
         # Check whether the specified path exists or not
         isExist = os.path.exists(folder)
 

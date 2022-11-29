@@ -211,7 +211,7 @@ class ProcessData:
 
         return df_phys
 
-    def get_raw_data(self, log_file, lin=False, passwords={}):
+    def get_raw_data(self, log_file, passwords={}, lin=False):
         """Extract a df of raw data and device ID from log file.
         Optionally include LIN bus data by setting lin=True
         """
