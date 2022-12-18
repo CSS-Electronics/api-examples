@@ -11,3 +11,7 @@ This script lets you process MF4 log files across multiple CANedge devices. The 
 The data can be fetched from an absolute input path on local disk (e.g. the `LOG/` folder on an SD card) and saved locally. 
 
 Alternatively, the files can be loaded/saved directly from/to S3 buckets. This requires that you map your S3 input/output bucket(s) using [TntDrive](https://canlogger.csselectronics.com/canedge-getting-started/transfer-data/server-tools/other-s3-tools/). 
+
+## Installation
+
+See the README in the root of the api-examples repository.  
