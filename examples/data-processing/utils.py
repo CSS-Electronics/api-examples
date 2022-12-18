@@ -95,7 +95,7 @@ def restructure_data(df_phys, res, full_col_names=False, pgn_names=False):
 
                 df_phys_join = pd.merge_ordered(
                     df_phys_join,
-                    data["Physical Value"].rename(col_name).resample(res).pad().dropna(),
+                    data["Physical Value"].rename(col_name).resample(res).ffill().dropna(),
                     on="TimeStamp",
                     fill_method="none",
                 ).set_index("TimeStamp")
