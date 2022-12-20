@@ -9,41 +9,45 @@ from asammdf import MDF
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from concatenate_utils import extract_mdf_start_stop_time, hour_rounder
-import sys
+import sys,os, shutil
+import subprocess, glob
+import gc
 
+path_script = Path(__file__).parent.absolute()
 
-# specify input path for MF4 files (e.g. "D:/LOG" for SD, "Z:" for mapped S3 bucket, ...)
-input_root = Path("Z:")
+# specify input paths for MF4 files (e.g. "D:/LOG" for SD, "Z:" for mapped S3 bucket, ...)
+path_input = Path("Z:")
 
-# specify output path (e.g. other mapped S3 bucket, local disk, ...)
-output_root = Path("C:/concatenate-mf4-by-period")
+# specify devices to process from path_input
+devices = ["2F6913DB"]
+
+# specify output path (e.g. another mapped S3 bucket, local disk, ...)
+path_output = path_script / "mf4-output/concatenated"
+path_output_temp = path_script / "mf4-output/temp"
+
+# optionally finalize files (if *.MFC) and DBC decode them
+finalize_log_files = True
+enable_dbc_decoding = False
+path_dbc_files = path_script / "dbc_files"
+path_mdf2finalized = path_script  / "mdf2finalized.exe"
 
 # specify which period you wish to process and the max period length of each concatenated log file
 period_start = datetime(year=2022, month=12, day=12, hour=2, tzinfo=timezone.utc)
 period_stop = datetime(year=2022, month=12, day=16, hour=2, tzinfo=timezone.utc)
 file_length_hours = 24
 
-# specify devices to process (from the input_root folder)
-devices = ["2F6913DB", "00000000"]
-
-# optionally DBC decode the data
-dbc_path = input_root / "dbc_files"
-dbc_files = {"CAN": [(dbc, 0) for dbc in list(dbc_path.glob("*" + ".DBC"))]}
-enable_dbc_decoding = False
-
 # ----------------------------------------
-fs = canedge_browser.LocalFileSystem(base_path=input_root)
+fs = canedge_browser.LocalFileSystem(base_path=path_input)
+dbc_files = {"CAN": [(dbc, 0) for dbc in list(path_dbc_files.glob("*" + ".DBC"))]}
 
 for device in devices:
-    cnt_input_files = 0
-    cnt_output_files = 0
     cnt_sub_period = 0
     sub_period_start = period_start
     sub_period_stop = period_start
     files_to_skip = []
 
     log_files_total = canedge_browser.get_log_files(fs, device, start_date=period_start,stop_date=period_stop)
-    log_files_total = [Path(input_root,log_file) for log_file in log_files_total]
+    log_files_total = [Path(path_input,log_file) for log_file in log_files_total]
     print(f"\n-----------\nProcessing device {device} | sub period length: {file_length_hours} hours | start: {period_start} | stop: {period_stop} | {len(log_files_total)} log file(s): ",log_files_total)
 
     # check whether to update sub_period_start to equal 2nd log file start for efficiency
@@ -67,15 +71,23 @@ for device in devices:
         sub_period_stop = sub_period_start + timedelta(hours=file_length_hours)
 
         # list log files for the sub period
-        log_files = canedge_browser.get_log_files(fs, device, start_date=sub_period_start,stop_date=sub_period_stop)
-        log_files = [Path(input_root,log_file) for log_file in log_files]
-        log_files = [log_file for log_file in log_files if log_file not in files_to_skip]
+        log_files_orig_path = canedge_browser.get_log_files(fs, device, start_date=sub_period_start,stop_date=sub_period_stop)
+        log_files_orig_path = [Path(path_input,log_file) for log_file in log_files_orig_path]
+        log_files = [log_file for log_file in log_files_orig_path if log_file not in files_to_skip]
+
         if len(log_files) > 0:
             print(f"\n- Sub period #{cnt_sub_period} \t\t\t| start: {sub_period_start} | stop: {sub_period_stop} | {len(log_files)} log file(s): ", log_files)
 
         if len(log_files) == 0:
             sub_period_start = sub_period_stop
             continue
+
+        # finalize MF4 files and output to temporary folder
+        if finalize_log_files:
+            for log_file in log_files:
+                path_output_file_temp_name = Path(*log_file.parts[1:3])
+                subprocess.run([path_mdf2finalized, "-i", log_file, "-O", path_output_temp / path_output_file_temp_name,])
+            log_files = list(path_output_temp.glob('**/*.MF4'))
 
         # concatenate all sub period files and identify the delta sec to start/stop
         mdf = MDF.concatenate(log_files)
@@ -93,23 +105,33 @@ for device in devices:
         mdf_start_str = mdf_start.strftime(f"%y%m%d-%H%M")
         mdf_stop_str = mdf_stop.strftime(f"%y%m%d-%H%M")
         output_file_name = f"{device}/{mdf_start_str}-to-{mdf_stop_str}.MF4"
-        output_path = output_root / output_file_name
+        path_output_file = path_output / output_file_name
 
         # DBC decode the data before saving
         if enable_dbc_decoding:
             mdf = mdf.extract_bus_logging(dbc_files)
 
         # save the cut MF4 to local disk
-        mdf.save(output_path, overwrite=True)
-        print(f"- Concatenated MF4 saved (cut)\t\t| start: {mdf_start} | stop: {mdf_stop} | {output_path}")
+        mdf.save(path_output_file, overwrite=True)
+        print(f"- Concatenated MF4 saved (cut)\t\t| start: {mdf_start} | stop: {mdf_stop} | {path_output_file}")
 
-        cnt_output_files += 1
-        sub_period_start = sub_period_stop
+        # clear MDF
+        mdf = mdf.close()
+        del mdf
+        gc.collect()
+
+        # if temp folder is used, clear it
+        if finalize_log_files and os.path.exists(path_output_temp):
+            print("- Deleting temporary folder")
+            shutil.rmtree(path_output_temp)
 
         # check if the last log file is fully within sub period (i.e. skip it during next cycle)
         if mdf_stop < sub_period_stop:
-            files_to_skip.append(log_files[-1])
+            files_to_skip.append(log_files_orig_path[-1])
 
-            if log_files[-1] == log_files_total[-1]:
+            if log_files_orig_path[-1] == log_files_total[-1]:
                 print(f"- Completed processing device {device}")
                 break
+
+        # update sub period start
+        sub_period_start = sub_period_stop
