@@ -1,7 +1,7 @@
 from asammdf import MDF
 import glob, sys, os
 from pathlib import Path
-
+from datetime import timedelta
 
 # set variables
 suffix_start = True  # include session start time in mat file names
@@ -26,11 +26,14 @@ print("Log file(s): ", logfiles, "\nDBC(s): ", dbc_files, "\n")
 for logfile in logfiles:
     # load MF4 log file and get the session start
     mdf = MDF(logfile)
-    session_start = mdf.header.start_time.strftime("%Y%m%dT%H%M%S")
+    session_start = mdf.header.start_time
+    delta_seconds_start = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[0]
+    mdf_start = (session_start + timedelta(seconds=delta_seconds_start))
+    mdf_start_str = mdf_start.strftime(f"%y%m%d-%H%M")
 
-    # optionally use session start in output filename
+    # optionally use 1st timestamp start in output filename
     if suffix_start:
-        mat_extension = f"-{session_start}.mat"
+        mat_extension = f"-{mdf_start_str}.mat"
     else:
         mat_extension = ".mat"
 
@@ -51,22 +54,18 @@ for logfile in logfiles:
     # EXPORT TO DBC DECODED MF4
     mdf_scaled.save(output_path_mf4, overwrite=True)
 
-    # EXPORT TO DBC DECODED MAT (if output file does not exist)
-    try:
-        os.path.isfile(output_path_mat)
-        print(f"MAT file already exists at {output_path_mat}")
-    except:
-        Path(output_path_mat).parent.mkdir(parents=True, exist_ok=True)
+    # EXPORT TO DBC DECODED MAT
+    Path(output_path_mat).parent.mkdir(parents=True, exist_ok=True)
 
-        mdf_scaled.export(
-            "mat",
-            filename=output_path_mat,
-            time_from_zero=False,
-            single_time_base=True,
-            raster=raster,
-            use_display_names=True,
-            oned_as="column",
-            keep_arrays=True,
-        )
+    mdf_scaled.export(
+        "mat",
+        filename=output_path_mat,
+        time_from_zero=False,
+        single_time_base=True,
+        raster=raster,
+        use_display_names=True,
+        oned_as="column",
+        keep_arrays=True,
+    )
 
-        print(f"Saving MAT file to {output_path_mat}")
+    print(f"Saving MAT file to {output_path_mat}")
