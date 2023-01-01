@@ -72,35 +72,31 @@ def list_log_files(fs, devices, start_times, verbose=True, passwords={}):
 
     return log_files
 
-
-def restructure_data(df_phys, res, full_col_names=False, pgn_names=False):
-    import pandas as pd
+def add_signal_prefix(df_phys, can_id_prefix=False, pgn_prefix=False):
+    """Rename Signal names by prefixing the full
+    CAN ID (in hex) and/or J1939 PGN
+    """
     from J1939_PGN import J1939_PGN
 
-    df_phys_join = pd.DataFrame({"TimeStamp": []})
-    if not df_phys.empty:
-        for message, df_phys_message in df_phys.groupby("CAN ID"):
-            for signal, data in df_phys_message.groupby("Signal"):
+    if can_id_prefix == True and pgn_prefix == False:
+        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{hex(int(x))[2:].upper()}") + "." + df_phys["Signal"]
+    elif can_id_prefix == True and pgn_prefix == True:
+        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{hex(int(x))[2:].upper()}.{J1939_PGN(int(x)).pgn}") + "." + df_phys["Signal"]
+    elif can_id_prefix == False and pgn_prefix == True:
+        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{J1939_PGN(int(x)).pgn}") + "." + df_phys["Signal"]
 
-                pgn = J1939_PGN(int(message)).pgn
+    return df_phys
 
-                if full_col_names == True and pgn_names == False:
-                    col_name = str(hex(int(message))).upper()[2:] + "." + signal
-                elif full_col_names == True and pgn_names == True:
-                    col_name = str(hex(int(message))).upper()[2:] + "." + str(pgn) + "." + signal
-                elif full_col_names == False and pgn_names == True:
-                    col_name = str(pgn) + "." + signal
-                else:
-                    col_name = signal
+def restructure_data(df_phys, res):
+    """Restructure the decoded data to a resampled
+    format where each column reflects a Signal
+    """
+    import pandas as pd
 
-                df_phys_join = pd.merge_ordered(
-                    df_phys_join,
-                    data["Physical Value"].rename(col_name).resample(res).ffill().dropna(),
-                    on="TimeStamp",
-                    fill_method="none",
-                ).set_index("TimeStamp")
+    if not df_phys.empty and res != "":
+        df_phys = df_phys.pivot_table(values="Physical Value", index=pd.Grouper(freq=res), columns="Signal")
 
-    return df_phys_join
+    return df_phys
 
 
 def test_signal_threshold(df_phys, signal, threshold):
@@ -211,7 +207,7 @@ class ProcessData:
 
         return df_phys
 
-    def get_raw_data(self, log_file, passwords={}, lin=False):
+    def get_raw_data(self, log_file, passwords={},lin=False):
         """Extract a df of raw data and device ID from log file.
         Optionally include LIN bus data by setting lin=True
         """

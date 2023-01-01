@@ -43,7 +43,7 @@ for session_no in range(session_offset, sessions + session_offset):
             os.makedirs(folder)
 
         # Create file name
-        new_file_name = folder + "\\" + f"{split_no}".zfill(8) + ".MF4"
+        new_file_name = folder + "\/" + f"{split_no}".zfill(8) + ".MF4"
         # new_file_name = "{}_{:08}_{:08}-{}.mf4".format(device_id, session_no, split_no, digest)
         new_file_path = os.path.join(dir_path, new_file_name)
 
