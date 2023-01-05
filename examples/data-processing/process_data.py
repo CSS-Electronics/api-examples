@@ -8,9 +8,7 @@ from utils import setup_fs, load_dbc_files, restructure_data, add_custom_sig, Pr
 # specify devices to process (from local/S3), DBC files, start time and optionally passwords
 devices = ["LOG/958D2219"]
 
-# dbc_paths = ["dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
-
-dbc_paths = ["dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc", "dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
+dbc_paths = ["dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
 
 start = datetime(year=2020, month=1, day=13, hour=0, tzinfo=timezone.utc)
 stop = datetime(year=2030, month=1, day=1, hour=0, tzinfo=timezone.utc)
