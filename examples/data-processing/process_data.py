@@ -10,7 +10,7 @@ devices = ["LOG/958D2219"]
 
 dbc_paths = ["dbc_files/CSS-Electronics-SAE-J1939-DEMO.dbc"]
 
-start = datetime(year=2020, month=1, day=13, hour=0, tzinfo=timezone.utc)
+start = datetime(year=2020, month=1, day=1, hour=0, tzinfo=timezone.utc)
 stop = datetime(year=2030, month=1, day=1, hour=0, tzinfo=timezone.utc)
 
 pw = {"default": "password"}
@@ -41,7 +41,6 @@ df_phys_all = pd.concat(df_phys_all,ignore_index=False).sort_index()
 # example: Add a custom signal
 def ratio(s1, s2):
     return s2 / s1 if s1 else np.nan
-
 
 # df_phys_all = add_custom_sig(df_phys_all, "WheelBasedVehicleSpeed", "EngineSpeed", ratio, "RatioRpmSpeed")
 

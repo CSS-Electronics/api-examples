@@ -1,5 +1,4 @@
 *.csv
-*.exe
 *.json
 *.pyc
 *.png
@@ -21,4 +20,5 @@ env/
 *_fin.MF4
 *.idea
 *tp-uds-kia-ev6.dbc
-examples/other/matlab-basics/LOG_mf4_decoded/*
+*CSS-Electronics-J1939-*
+*ev6-gps.dbc*
