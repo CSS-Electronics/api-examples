@@ -16,7 +16,7 @@ stop = datetime(year=2030, month=1, day=1, hour=0, tzinfo=timezone.utc)
 pw = {"default": "password"}
 
 # setup filesystem (local/S3), load DBC files and list log files for processing
-fs = setup_fs(s3=False, key="", secret="", endpoint="", passwords=pw)
+fs = setup_fs(s3=False, key="", secret="", endpoint="", region="", passwords=pw)
 db_list = load_dbc_files(dbc_paths)
 log_files = canedge_browser.get_log_files(fs, devices, start_date=start, stop_date=stop, passwords=pw)
 print(f"Found a total of {len(log_files)} log files")

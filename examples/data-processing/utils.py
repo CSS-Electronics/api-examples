@@ -1,7 +1,8 @@
-def setup_fs(s3, key="", secret="", endpoint="", cert="", passwords={}):
+def setup_fs(s3, key="", secret="", endpoint="", region="",cert="", passwords={}):
     """Given a boolean specifying whether to use local disk or S3, setup filesystem
     Syntax examples: AWS (http://s3.us-east-2.amazonaws.com), MinIO (http://192.168.0.1:9000)
     The cert input is relevant if you're using MinIO with TLS enabled, for specifying the path to the certficiate.
+    For MinIO you should also parse the region_name
 
     The block_size is set to accomodate files up to 55 MB in size. If your log files are larger, adjust this value accordingly
     """
@@ -17,14 +18,14 @@ def setup_fs(s3, key="", secret="", endpoint="", cert="", passwords={}):
             fs = s3fs.S3FileSystem(
                 key=key,
                 secret=secret,
-                client_kwargs={"endpoint_url": endpoint, "verify": cert},
+                client_kwargs={"endpoint_url": endpoint, "verify": cert, "region_name": region},
                 default_block_size=block_size,
             )
         else:
             fs = s3fs.S3FileSystem(
                 key=key,
                 secret=secret,
-                client_kwargs={"endpoint_url": endpoint},
+                client_kwargs={"endpoint_url": endpoint, "region_name": region},
                 default_block_size=block_size,
             )
 
