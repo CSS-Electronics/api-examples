@@ -9,7 +9,7 @@ future==0.18.2
 isal==1.1.0
 lxml==4.9.2
 lz4==4.0.2
-mdf-iter==0.0.7
+mdf-iter>=2.0.4
 numexpr==2.8.4
 numpy==1.23.5
 pandas==1.5.2

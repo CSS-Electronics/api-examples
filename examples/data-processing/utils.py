@@ -88,7 +88,7 @@ def add_signal_prefix(df_phys, can_id_prefix=False, pgn_prefix=False):
 
     return df_phys
 
-def restructure_data(df_phys, res):
+def restructure_data(df_phys, res, ffill=False):
     """Restructure the decoded data to a resampled
     format where each column reflects a Signal
     """
@@ -97,6 +97,9 @@ def restructure_data(df_phys, res):
     if not df_phys.empty and res != "":
         df_phys = df_phys.pivot_table(values="Physical Value", index=pd.Grouper(freq=res), columns="Signal")
 
+    if ffill:
+        df_phys = df_phys.ffill()
+        
     return df_phys
 
 

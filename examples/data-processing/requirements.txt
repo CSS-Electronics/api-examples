@@ -17,7 +17,7 @@ idna==3.2
 importlib-metadata==4.5.0
 J1939-PGN==0.4
 jmespath==0.10.0
-mdf-iter>=0.0.7
+mdf-iter>=2.0.4
 multidict==5.1.0
 numpy==1.23.2
 pandas==1.4.3
