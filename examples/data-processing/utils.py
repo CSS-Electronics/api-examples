@@ -231,7 +231,7 @@ class ProcessData:
         return df_raw, device_id
 
     def get_device_id(self, mdf_file):
-        return mdf_file.get_metadata()["HDComment.Device Information.serial number"]["value_raw"]
+        return mdf_file.get_metadata()["HDcomment.Device Information.serial number"]["value_raw"]
 
     def print_log_summary(self, device_id, log_file, df_phys):
         """Print summary information for each log file"""
