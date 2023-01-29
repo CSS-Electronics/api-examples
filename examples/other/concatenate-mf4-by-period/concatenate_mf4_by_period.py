@@ -15,8 +15,9 @@ import gc
 
 path_script = Path(__file__).parent.absolute()
 
-# specify input paths for MF4 files (e.g. "D:/LOG" for SD, "Z:" for mapped S3 bucket, ...)
-path_input = Path("Z:")
+# specify input paths for MF4 files (e.g. on Windows Path("D:\\LOG") for SD, Path("Z:\\") for mapped S3 bucket,
+# path_script / "LOG" for relative folder, C:\\Users\\myuser\\folder\\subfolder\\LOG for absolute path, ...)
+path_input = path_script / "LOG"
 
 # specify devices to process from path_input
 devices = ["2F6913DB"]
@@ -32,12 +33,14 @@ path_dbc_files = path_script / "dbc_files"
 path_mdf2finalized = path_script  / "mdf2finalized.exe"
 
 # specify which period you wish to process and the max period length of each concatenated log file
-period_start = datetime(year=2022, month=12, day=12, hour=2, tzinfo=timezone.utc)
-period_stop = datetime(year=2022, month=12, day=16, hour=2, tzinfo=timezone.utc)
+period_start = datetime(year=2023, month=1, day=1, hour=2, tzinfo=timezone.utc)
+period_stop = datetime(year=2023, month=12, day=31, hour=2, tzinfo=timezone.utc)
 file_length_hours = 24
 
 # ----------------------------------------
 fs = canedge_browser.LocalFileSystem(base_path=path_input)
+
+print("path_input: ",path_input)
 dbc_files = {"CAN": [(dbc, 0) for dbc in list(path_dbc_files.glob("*" + ".DBC"))]}
 
 for device in devices:
@@ -47,11 +50,17 @@ for device in devices:
     files_to_skip = []
 
     log_files_total = canedge_browser.get_log_files(fs, device, start_date=period_start,stop_date=period_stop)
-    log_files_total = [Path(path_input,log_file) for log_file in log_files_total]
-    print(f"\n-----------\nProcessing device {device} | sub period length: {file_length_hours} hours | start: {period_start} | stop: {period_stop} | {len(log_files_total)} log file(s): ",log_files_total)
+    log_files_total = [path_input.joinpath(log_file[1:]) for log_file in log_files_total]
+    
+    print(f"\n-----------\nProcessing device {device} | sub period length: {file_length_hours} hours | start: {period_start} | stop: {period_stop} \n{len(log_files_total)} log file(s): ",log_files_total)
 
     # check whether to update sub_period_start to equal 2nd log file start for efficiency
+    if len(log_files_total) == 0:
+        print("Skipping device")
+        continue
+    
     mdf = MDF(log_files_total[0])
+
     mdf_start, mdf_stop = extract_mdf_start_stop_time(mdf)
 
     if mdf_stop < sub_period_start:
@@ -72,11 +81,11 @@ for device in devices:
 
         # list log files for the sub period
         log_files_orig_path = canedge_browser.get_log_files(fs, device, start_date=sub_period_start,stop_date=sub_period_stop)
-        log_files_orig_path = [Path(path_input,log_file) for log_file in log_files_orig_path]
+        log_files_orig_path = [path_input.joinpath(log_file[1:]) for log_file in log_files_orig_path]
         log_files = [log_file for log_file in log_files_orig_path if log_file not in files_to_skip]
 
         if len(log_files) > 0:
-            print(f"\n- Sub period #{cnt_sub_period} \t\t\t| start: {sub_period_start} | stop: {sub_period_stop} | {len(log_files)} log file(s): ", log_files)
+            print(f"\n- Sub period #{cnt_sub_period} \t\t\t| start: {sub_period_start} | stop: {sub_period_stop} \n- {len(log_files)} log file(s): ", log_files)
 
         if len(log_files) == 0:
             sub_period_start = sub_period_stop
@@ -113,7 +122,7 @@ for device in devices:
 
         # save the cut MF4 to local disk
         mdf.save(path_output_file, overwrite=True)
-        print(f"- Concatenated MF4 saved (cut)\t\t| start: {mdf_start} | stop: {mdf_stop} | {path_output_file}")
+        print(f"- Concatenated MF4 saved (cut)\t\t| start: {mdf_start} | stop: {mdf_stop} \n- Output path: {path_output_file}")
 
         # clear MDF
         mdf = mdf.close()

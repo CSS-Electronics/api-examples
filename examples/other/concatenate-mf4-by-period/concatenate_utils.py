@@ -3,8 +3,9 @@ def extract_mdf_start_stop_time(mdf):
 
     # function to identify start/stop timestamp of concatenated log file
     session_start = mdf.header.start_time
-    delta_seconds_start = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[0]
-    delta_seconds_stop = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[-1]
+    df_raw_asam = mdf.to_dataframe()    
+    delta_seconds_start = df_raw_asam.index[0]
+    delta_seconds_stop = df_raw_asam.index[-1]
     mdf_start = session_start + timedelta(seconds=delta_seconds_start)
     mdf_stop = session_start + timedelta(seconds=delta_seconds_stop)
 
