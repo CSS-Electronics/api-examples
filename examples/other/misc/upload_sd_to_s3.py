@@ -38,12 +38,12 @@ for log_file in log_files:
 
     with fs.open(log_file, "rb") as handle:
         mdf_file = mdf_iter.MdfFile(handle)
-        header = "HDComment.Device Information"
+        header = "HDcomment.Device Information"
 
         device_id = mdf_file.get_metadata()[f"{header}.serial number"]["value_raw"]
-        session = mdf_file.get_metadata()[f"{header}.File Information.session"]["value_raw"]
+        session = mdf_file.get_metadata()[f"HDcomment.File Information.session"]["value_raw"]
         session = f"{(int(session) + session_offset):08}"
-        split = int(mdf_file.get_metadata()[f"{header}.File Information.split"]["value_raw"])
+        split = int(mdf_file.get_metadata()[f"HDcomment.File Information.split"]["value_raw"])
         split = f"{split:08}"
         ext = log_file.split(".")[-1]
 

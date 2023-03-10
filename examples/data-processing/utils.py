@@ -73,20 +73,26 @@ def list_log_files(fs, devices, start_times, verbose=True, passwords={}):
 
     return log_files
 
-def add_signal_prefix(df_phys, can_id_prefix=False, pgn_prefix=False):
+def add_signal_prefix(df_phys, can_id_prefix=False, pgn_prefix=False, bus_prefix=False):
     """Rename Signal names by prefixing the full
     CAN ID (in hex) and/or J1939 PGN
     """
     from J1939_PGN import J1939_PGN
-
-    if can_id_prefix == True and pgn_prefix == False:
-        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{hex(int(x))[2:].upper()}") + "." + df_phys["Signal"]
-    elif can_id_prefix == True and pgn_prefix == True:
-        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{hex(int(x))[2:].upper()}.{J1939_PGN(int(x)).pgn}") + "." + df_phys["Signal"]
-    elif can_id_prefix == False and pgn_prefix == True:
-        df_phys["Signal"] = df_phys["CAN ID"].apply(lambda x: f"{J1939_PGN(int(x)).pgn}") + "." + df_phys["Signal"]
-
-    return df_phys
+    
+    if df_phys.empty:
+        return df_phys 
+    else:
+        prefix = ""
+        if bus_prefix:
+            prefix += df_phys["BusChannel"].apply(lambda x: f"{x}.")
+        if can_id_prefix:
+            prefix += df_phys["CAN ID"].apply(lambda x: f"{hex(int(x))[2:].upper()}." )
+        if pgn_prefix:
+            prefix += df_phys["CAN ID"].apply(lambda x: f"{J1939_PGN(int(x)).pgn}.")
+            
+        df_phys["Signal"] = prefix + df_phys["Signal"]
+        
+        return df_phys
 
 def restructure_data(df_phys, res, ffill=False):
     """Restructure the decoded data to a resampled
@@ -173,11 +179,15 @@ class ProcessData:
         for db in self.db_list:
             df_decoder = can_decoder.DataFrameDecoder(db)
 
-            for length, group in df_raw.groupby("DataLength"):
-                df_phys_temp.append(df_decoder.decode_frame(group))
-
+            for bus, bus_group in df_raw.groupby("BusChannel"):  
+                for length, group in bus_group.groupby("DataLength"):
+                    df_phys_group = df_decoder.decode_frame(group)
+                    if not df_phys_group.empty:
+                        df_phys_group["BusChannel"] = bus 
+                    df_phys_temp.append(df_phys_group)
+                    
         df_phys = pd.concat(df_phys_temp, ignore_index=False).sort_index()
-
+        
         # remove duplicates in case multiple DBC files contain identical signals
         df_phys["datetime"] = df_phys.index
         df_phys = df_phys.drop_duplicates(keep="first")
