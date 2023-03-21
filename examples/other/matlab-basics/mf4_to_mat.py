@@ -27,7 +27,10 @@ for logfile in logfiles:
     # load MF4 log file and get the session start
     mdf = MDF(logfile)
     session_start = mdf.header.start_time
-    delta_seconds_start = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[0]
+    df_raw_asam = mdf.to_dataframe()    
+    delta_seconds_start = df_raw_asam.index[0]
+    delta_seconds_stop = df_raw_asam.index[-1]
+    
     mdf_start = (session_start + timedelta(seconds=delta_seconds_start))
     mdf_start_str = mdf_start.strftime(f"%y%m%d-%H%M")
 
