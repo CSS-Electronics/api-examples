@@ -393,7 +393,7 @@ class MultiFrameDecoder:
         # for J1939, extract PGN and convert to 29 bit CAN ID for use in baseframe
         pgn_hex = "".join("{:02x}".format(x) for x in reversed(row.DataBytes[5:8]))
         pgn = int(pgn_hex, 16)
-        can_id = (6 << 26) | (pgn << 8) | 254
+        can_id = (6 << 26) | (pgn << 8) | row.SA
         return can_id
 
     def get_payload_length(self,row):
