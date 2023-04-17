@@ -498,7 +498,7 @@ class MultiFrameDecoder:
                     df_raw_res_id_new = pd.DataFrame(frame_list, columns=base_frame.index, index=frame_timestamp_list)
                     df_raw.append(df_raw_res_id_new)
 
-        df_raw = pd.concat(df_raw,join='inner')
+        df_raw = pd.concat(df_raw,join='outer')
         df_raw.index.name = "TimeStamp"
         df_raw = df_raw.sort_index()
         return df_raw
