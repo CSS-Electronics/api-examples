@@ -95,6 +95,12 @@ for device in devices:
         if finalize_log_files:
             for log_file in log_files:
                 path_output_file_temp_name = Path(*log_file.parts[1:3])
+                
+                try:
+                    Path(path_output_temp / path_output_file_temp_name).mkdir(parents=True, exist_ok=True)
+                except Exception as e:
+                    print(e)
+                    
                 subprocess.run([path_mdf2finalized, "-i", log_file, "-O", path_output_temp / path_output_file_temp_name,])
             log_files = list(path_output_temp.glob('**/*.MF4'))
 
