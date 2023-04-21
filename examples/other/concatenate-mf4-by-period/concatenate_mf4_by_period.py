@@ -8,9 +8,8 @@ import canedge_browser
 from asammdf import MDF
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from concatenate_utils import extract_mdf_start_stop_time, hour_rounder
+from concatenate_utils import extract_mdf_start_stop_time, hour_rounder, finalize_log_files
 import sys,os, shutil
-import subprocess, glob
 import gc
 
 path_script = Path(__file__).parent.absolute()
@@ -27,7 +26,7 @@ path_output = path_script / "mf4-output/concatenated"
 path_output_temp = path_script / "mf4-output/temp"
 
 # optionally finalize files (if *.MFC) and DBC decode them
-finalize_log_files = True
+finalize = True
 enable_dbc_decoding = False
 path_dbc_files = path_script / "dbc_files"
 path_mdf2finalized = path_script  / "mdf2finalized.exe"
@@ -59,7 +58,13 @@ for device in devices:
         print("Skipping device")
         continue
     
-    mdf = MDF(log_files_total[0])
+    # finalize MF4 files and output to temporary folder
+    first_log_file = log_files_total[0]
+    
+    if finalize:
+        first_log_file = finalize_log_files([first_log_file], path_output_temp, path_mdf2finalized)[0]
+       
+    mdf = MDF(first_log_file)
 
     mdf_start, mdf_stop = extract_mdf_start_stop_time(mdf)
 
@@ -92,17 +97,8 @@ for device in devices:
             continue
 
         # finalize MF4 files and output to temporary folder
-        if finalize_log_files:
-            for log_file in log_files:
-                path_output_file_temp_name = Path(*log_file.parts[1:3])
-                
-                try:
-                    Path(path_output_temp / path_output_file_temp_name).mkdir(parents=True, exist_ok=True)
-                except Exception as e:
-                    print(e)
-                    
-                subprocess.run([path_mdf2finalized, "-i", log_file, "-O", path_output_temp / path_output_file_temp_name,])
-            log_files = list(path_output_temp.glob('**/*.MF4'))
+        if finalize:
+            log_files = finalize_log_files(log_files, path_output_temp, path_mdf2finalized)
 
         # concatenate all sub period files and identify the delta sec to start/stop
         mdf = MDF.concatenate(log_files)
@@ -136,7 +132,7 @@ for device in devices:
         gc.collect()
 
         # if temp folder is used, clear it
-        if finalize_log_files and os.path.exists(path_output_temp):
+        if finalize and os.path.exists(path_output_temp):
             print("- Deleting temporary folder")
             shutil.rmtree(path_output_temp)
 
