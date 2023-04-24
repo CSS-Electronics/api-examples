@@ -2,13 +2,10 @@ def extract_mdf_start_stop_time(mdf):
     from datetime import timedelta
 
     # function to identify start/stop timestamp of concatenated log file
-    session_start = mdf.header.start_time
-    df_raw_asam = mdf.to_dataframe()    
-    delta_seconds_start = df_raw_asam.index[0]
-    delta_seconds_stop = df_raw_asam.index[-1]
-    mdf_start = session_start + timedelta(seconds=delta_seconds_start)
-    mdf_stop = session_start + timedelta(seconds=delta_seconds_stop)
-
+    df_raw_asam = mdf.to_dataframe(time_as_date=True)    
+    mdf_start = df_raw_asam.index[0]
+    mdf_stop = df_raw_asam.index[-1]
+   
     return mdf_start, mdf_stop
 
 def hour_rounder(t):
