@@ -20,16 +20,39 @@ def finalize_log_files(log_files, path_output_temp, path_mdf2finalized):
     import subprocess
     from pathlib import Path
     import glob
-    
+    import shutil
+
+    path_output_temp_finalized = path_output_temp.parent / "temp_finalized"
+
     for log_file in log_files:
-            
-        path_output_file_temp_name = Path(*log_file.parts[1:3])
-        
+        path_output_file_temp_name = Path(*log_file.parts[-3:][0:2])
+
+        # create repository for finalized files
+        try:
+            Path(path_output_temp_finalized / path_output_file_temp_name).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(e)
+
+        # create repository for unfinalized files
         try:
             Path(path_output_temp / path_output_file_temp_name).mkdir(parents=True, exist_ok=True)
         except Exception as e:
             print(e)
-            
-        subprocess.run([path_mdf2finalized, "-i", log_file, "-O", path_output_temp / path_output_file_temp_name,])
-    log_files = list(path_output_temp.glob('**/*.MF4'))
+
+        # copy log file to local disk first
+        shutil.copy(log_file, path_output_temp / path_output_file_temp_name)
+
+        # finalize the copied file
+        subprocess.run(
+            [
+                path_mdf2finalized,
+                "-i",
+                path_output_temp / path_output_file_temp_name / log_file.name,
+                "-O",
+                path_output_temp_finalized / path_output_file_temp_name,
+            ]
+        )
+
+    log_files = list(path_output_temp_finalized.glob("**/*.MF4"))
+
     return log_files
