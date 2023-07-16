@@ -39,8 +39,8 @@ df_phys_all = pd.concat(df_phys_all,ignore_index=False).sort_index()
 
 # --------------------------------------------
 # example: Add a custom signal
-def ratio(s1, s2):
-    return s2 / s1 if s1 else np.nan
+# def ratio(s1, s2):
+#     return s2 / s1 if s1 else np.nan
 
 # df_phys_all = add_custom_sig(df_phys_all, "WheelBasedVehicleSpeed", "EngineSpeed", ratio, "RatioRpmSpeed")
 
