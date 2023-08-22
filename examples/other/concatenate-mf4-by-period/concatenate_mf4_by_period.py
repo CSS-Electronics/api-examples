@@ -28,6 +28,7 @@ path_output_temp = path_script / "mf4-output/temp"
 # optionally finalize files (if *.MFC) and DBC decode them
 finalize = True
 enable_dbc_decoding = False
+enable_mf4_compression = True
 path_dbc_files = path_script / "dbc_files"
 path_mdf2finalized = path_script  / "mdf2finalized.exe"
 
@@ -123,7 +124,7 @@ for device in devices:
             mdf = mdf.extract_bus_logging(dbc_files)
 
         # save the cut MF4 to local disk
-        mdf.save(path_output_file, overwrite=True)
+        mdf.save(path_output_file, overwrite=True, compression=enable_mf4_compression)
         print(f"- Concatenated MF4 saved (cut)\t\t| start: {mdf_start} | stop: {mdf_stop} \n- Output path: {path_output_file}")
 
         # clear MDF

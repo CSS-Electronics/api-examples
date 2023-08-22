@@ -19,7 +19,7 @@ idna==3.4
 influxdb-client==1.35.0
 J1939-PGN==0.4
 jmespath==0.10.0
-mdf_iter>=2.0.8
+mdf_iter>=2.0.10
 multidict==6.0.2
 numpy==1.24.1
 pandas==1.5.3
