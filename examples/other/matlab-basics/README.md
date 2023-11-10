@@ -6,6 +6,8 @@ The scripts primarily focus on showcasing how you can load the log files from th
 
 Further, we also provide a script example letting you load `.mat` files instead of MF4 files, in case you prefer not to use the Vehicle Network Toolbox. To help automate the export of your MF4 to `.mat` we provide a plug & play script example.
 
+**NOTE:** You can use our new MF4 decoders to create a Parquet data lake. This is now our recommended solution for working with your CANedge data in MATLAB. For details and script examples, see the [MF4 decoder docs](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/mdf4-decoders/).
+
 ---
 
 ## File overview
