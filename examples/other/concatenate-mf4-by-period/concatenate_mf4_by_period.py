@@ -16,17 +16,16 @@ path_script = Path(__file__).parent.absolute()
 
 # specify input paths for MF4 files (e.g. on Windows Path("D:\\LOG") for SD, Path("Z:\\") for mapped S3 bucket,
 # path_script / "LOG" for relative folder, C:\\Users\\myuser\\folder\\subfolder\\LOG for absolute path, ...)
-path_input = path_script / "LOG"
+path_input_orig = path_script / "LOG"
 
 # specify devices to process from path_input
-devices = ["2F6913DB"]
+devices = ["2F6913DB", "5BC57FEC"]
 
 # specify output path (e.g. another mapped S3 bucket, local disk, ...)
 path_output = path_script / "mf4-output/concatenated"
 path_output_temp = path_script / "mf4-output/temp"
 
 # optionally finalize files (if *.MFC) and DBC decode them
-finalize = True
 enable_dbc_decoding = False
 enable_mf4_compression = True
 path_dbc_files = path_script / "dbc_files"
@@ -38,12 +37,13 @@ period_stop = datetime(year=2023, month=12, day=31, hour=2, tzinfo=timezone.utc)
 file_length_hours = 24
 
 # ----------------------------------------
-fs = canedge_browser.LocalFileSystem(base_path=path_input)
 
-print("path_input: ",path_input)
 dbc_files = {"CAN": [(dbc, 0) for dbc in list(path_dbc_files.glob("*" + ".DBC"))]}
 
 for device in devices:
+    path_input = path_input_orig
+    fs = canedge_browser.LocalFileSystem(base_path=path_input)
+
     cnt_sub_period = 0
     sub_period_start = period_start
     sub_period_stop = period_start
@@ -59,12 +59,14 @@ for device in devices:
         print("Skipping device")
         continue
     
-    # finalize MF4 files and output to temporary folder
-    first_log_file = log_files_total[0]
+    # finalize all files, then update the filesystem fs and path_input to the temp_finalized sub folder
+    log_files_total = finalize_log_files(log_files_total, path_output_temp, path_mdf2finalized)
+    fs = canedge_browser.LocalFileSystem(base_path=path_input / path_output_temp.parent / "temp_finalized")
+    path_input = path_input / path_output_temp.parent / "temp_finalized"
     
-    if finalize:
-        first_log_file = finalize_log_files([first_log_file], path_output_temp, path_mdf2finalized)[0]
-       
+    # extract first_log_file 
+    first_log_file = log_files_total[0]
+
     mdf = MDF(first_log_file)
 
     mdf_start, mdf_stop = extract_mdf_start_stop_time(mdf)
@@ -96,10 +98,6 @@ for device in devices:
         if len(log_files) == 0:
             sub_period_start = sub_period_stop
             continue
-
-        # finalize MF4 files and output to temporary folder
-        if finalize:
-            log_files = finalize_log_files(log_files, path_output_temp, path_mdf2finalized)
 
         # concatenate all sub period files and identify the delta sec to start/stop
         mdf = MDF.concatenate(log_files)
@@ -133,7 +131,7 @@ for device in devices:
         gc.collect()
 
         # if temp folder is used, clear it
-        if finalize and os.path.exists(path_output_temp):
+        if os.path.exists(path_output_temp):
             print("- Deleting temporary folder")
             shutil.rmtree(path_output_temp)
 
