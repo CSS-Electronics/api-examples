@@ -1,4 +1,15 @@
-# CAN bus API examples (Python/MATLAB) | CANedge
+# CAN bus API examples (Python/MATLAB) | CANedge [LEGACY]
+
+## Update: Legacy notice + new Python/MATLAB integration methods
+If you need to work with the CANedge data in Python/MATLAB, we now recommend to use the methods described in the below documentations:
+- CANedge + Python: [About](https://www.csselectronics.com/pages/python-can-bus-api) | [Intro](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/api-tools)
+- CANedge + MATLAB: [About]https://www.csselectronics.com/pages/matlab-mdf-mf4-can-bus) | [Intro](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/matlab) 
+
+The Python methods/modules shown in repository under `examples/data-processing/` can still be used, but will not be updated going forward (this refers to the sub modules of our Python API, `mdf-iter`, `canedge-browser` and `can-decoder`). We instead refer to our new integration with python-can or our Python examples of how to work with DBC decoded Parquet data lakes. The script examples found in `examples/other/` will still be relevant going forward.
+
+--------------------
+
+## Overview
 
 This project includes Python and MATLAB examples of how to process MF4 log files with CAN/LIN data from your [CANedge](https://www.csselectronics.com/) data loggers. Most examples focus on the use of our Python API modules (`canedge_browser`, `mdf_iter`, `can_decoder`) for use with the CANedge log file formats (`MF4`, `MFC`, `MFE`, `MFM`). However, you'll also find other script examples incl. for the asammdf Python API, MATLAB, S3 and more.
 
