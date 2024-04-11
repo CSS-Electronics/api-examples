@@ -1,6 +1,6 @@
 """
 About: Load MDF log files & DBCs from an input folder and showcase various operations.
-Note: Example assumes v6.4.4+ of asammdf
+Note: Example assumes v7.5.0dev2 of asammdf
 """
 from asammdf import MDF
 import matplotlib.pyplot as plt
@@ -28,20 +28,10 @@ print("Log file(s): ", logfiles, "\nDBC(s): ", dbc_files)
 # concatenate MDF files from input folder and export as CSV incl. timestamps (localized time)
 mdf = MDF.concatenate(logfiles)
 mdf.save(Path(path_out, "conc"), overwrite=True)
-mdf.export("csv", filename=Path(path_out, "conc"), time_as_date=True, time_from_zero=False)
-
-# extract info from meta header - e.g. to get correct start time of a file
-session_start = mdf.header.start_time
-delta_seconds = mdf.select(["CAN_DataFrame.BusChannel"])[0].timestamps[0]
-split_start = session_start + timedelta(seconds=delta_seconds)
-split_start_str = split_start.strftime("%Y%m%d%H%M%S")
-
-# filter an MDF
-mdf_filter = mdf.filter(["CAN_DataFrame.ID", "CAN_DataFrame.DataBytes"])
-mdf.save(Path(path_out, "filtered"), overwrite=True)
+mdf.export("csv", filename=Path(path_out, "conc"), time_as_date=True, time_from_zero=False, single_time_base=True)
 
 # DBC convert the unfiltered MDF + save & export resampled data
-mdf_scaled = mdf.extract_bus_logging(dbc_files, ignore_invalid_signals=True)
+mdf_scaled = mdf.extract_bus_logging(dbc_files)
 
 mdf_scaled.save("scaled", overwrite=True)
 mdf_scaled.export(
