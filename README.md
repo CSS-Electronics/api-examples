@@ -5,7 +5,7 @@ If you need to work with the CANedge data in Python/MATLAB, we now recommend to 
 - CANedge + Python: [About](https://www.csselectronics.com/pages/python-can-bus-api) | [Intro](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/api-tools)
 - CANedge + MATLAB: [About](https://www.csselectronics.com/pages/matlab-mdf-mf4-can-bus) | [Intro](https://canlogger.csselectronics.com/canedge-getting-started/ce3/log-file-tools/matlab) 
 
-The Python methods/modules shown in repository under `examples/data-processing/` can still be used, but will not be updated going forward (this refers to the sub modules of our Python API, `mdf-iter`, `canedge-browser` and `can-decoder`). We instead refer to our new integration with python-can - and our examples of how to work with DBC decoded Parquet data lakes in Python. The script examples found in `examples/other/` will still be relevant going forward.
+The Python methods/modules shown in repository under `examples/data-processing/` can still be used, but will not be updated going forward (this refers to the sub modules of our Python API, `mdf-iter`, `canedge-browser` and `can-decoder`). We instead refer to our new integration with python-can - and our examples of how to work with DBC decoded Parquet data lakes in Python using our MF4 decoders. The script examples found in `examples/other/` will still be relevant going forward.
 
 --------------------
 
